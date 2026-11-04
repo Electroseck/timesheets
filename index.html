@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Electroseck Timesheet</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3F1F1; --panel:#FFFFFF; --fg:#161414; --muted:#6B6363; --line:#E2DDDD;
+  --accent:#DA1F26; --accent-ink:#8E1B1B; --accent-soft:#F7E3E3; --head:#151313; --ok:#1E7A4F; --ok-soft:#E3F2EA;
+  --display:'Anton',Impact,'Arial Narrow',sans-serif; --body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#121010; --panel:#1C1919; --fg:#F2EEEE; --muted:#A79E9E; --line:#2E2828; --accent:#EF4A4F; --accent-ink:#F07B72; --accent-soft:#2D1A1A; --head:#0A0909; --ok:#4CC08A; --ok-soft:#143024; color-scheme:dark}}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;margin:0}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--head);color:#fff;padding-block:22px 18px}
+header .wrap{display:flex;flex-direction:column;gap:4px}
+.brand{display:flex;align-items:center;gap:10px}
+.bolt{width:20px;height:26px;flex:none}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,7vw,38px);letter-spacing:.02em;text-transform:uppercase;margin:0;line-height:1}
+header p{margin:0;color:#CFC8C8;font-size:15px}
+main{padding-block:16px 130px;display:flex;flex-direction:column;gap:12px}
+.hello{font-size:18px;font-weight:600;margin:0}
+.explain{font-size:14.5px;color:var(--muted);margin:0}
+.banner{border-radius:12px;padding:12px 14px;font-size:15px}
+.banner.ok{background:var(--ok-soft);color:var(--ok);border:1px solid var(--ok)}
+.banner.err{background:var(--accent-soft);color:var(--accent-ink);border:1px solid var(--accent)}
+.day{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.day.off{opacity:.8}
+.dh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dh h2{font-family:var(--display);font-weight:400;font-size:20px;letter-spacing:.04em;text-transform:uppercase;margin:0}
+.dh h2 small{font-family:var(--body);text-transform:none;letter-spacing:0;font-size:13.5px;color:var(--muted);margin-left:6px}
+.hrs{font-family:var(--mono);font-weight:500;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1.25fr) minmax(0,1fr);gap:8px}
+.row.two{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;min-width:0}
+input,select,textarea{font:inherit;font-size:16px;padding:9px 10px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--fg);width:100%;min-width:0;text-transform:none;letter-spacing:0;font-weight:400}
+input[type=time]{padding:9px 6px}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.step{display:flex;align-items:stretch;gap:6px}
+.step button{font:800 20px var(--body);width:44px;flex:none;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
+.step input{text-align:center;font-family:var(--mono)}
+.jobs{display:flex;flex-direction:column;gap:6px}
+.jl{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.addjob{align-self:flex-start;font:600 14px var(--body);padding:6px 10px;border-radius:8px;border:1px dashed var(--line);background:transparent;color:var(--accent-ink);cursor:pointer}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-self:end}
+.tools button{font:600 13.5px var(--body);padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
+.calc{font-size:13px;color:var(--muted);margin:0}.calc b{color:var(--fg);font-weight:600}
+.tag{display:inline-block;font-family:var(--mono);font-size:11px;padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--accent-ink);margin-left:4px;vertical-align:1px}
+.foot{position:fixed;left:0;right:0;bottom:0;background:var(--head);color:#fff;padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
+.foot .wrap{display:flex;justify-content:space-between;align-items:center;gap:12px;padding-block:10px}
+.tot{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+.tot span{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#CFC8C8}
+.tot b{font-family:var(--display);font-weight:400;font-size:20px;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+.done{font:800 16px var(--body);padding:12px 18px;border-radius:10px;border:0;background:var(--accent);color:#fff;cursor:pointer;flex:none}
+.done:disabled{opacity:.6;cursor:default}
+.done.sent{background:var(--ok)}
+.weeknav{display:flex;justify-content:space-between;gap:8px}
+.weeknav button{font:600 14px var(--body);padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
+.empty{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;font-size:15.5px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="brand"><svg class="bolt" viewBox="0 0 24 30" aria-hidden="true"><path d="M15 0 3 17h8l-3 13 13-18h-8z" fill="#DA1F26"/></svg><h1>Timesheet</h1></div>
+  <p id="wkline">Loading your week…</p>
+</div></header>
+
+<main class="wrap" id="main">
+  <div class="empty" id="loading">Loading your timesheet…</div>
+</main>
+
+<div class="foot" id="foot" hidden><div class="wrap">
+  <div class="tot"><span>Week total</span><b id="wk">0.0 hrs</b></div>
+  <button type="button" class="done" id="done">Done – send to Emma</button>
+</div></div>
+
+<script>
+(function(){
+const SB='https://refvgqfirhjfxsatyuto.supabase.co/rest/v1/rpc/';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlZnZncWZpcmhqZnhzYXR5dXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNjAyMzEsImV4cCI6MjEwNjgzNjIzMX0.cYUkiH-V5Gj86m_l5D9yyPYhzJIwINxHa9Kiz_oyuhI';
+const params=new URLSearchParams(location.search);
+const token=(params.get('t')||'').trim();
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const NAMES=['Mon','Tue','Wed','Thu','Fri','Sat'];
+let STD={start:'06:30',finish:'14:30',break:30};
+let week=null, data=null, st=[], jobs=[], dirty=false;
+
+async function rpc(fn,body){
+  const r=await fetch(SB+fn,{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok) throw new Error('Server said '+r.status);
+  return r.json();
+}
+const pad=n=>String(n).padStart(2,'0');
+function addDays(iso,n){const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+n);return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())}
+function nice(iso){const d=new Date(iso+'T00:00:00');return d.toLocaleDateString('en-AU',{day:'numeric',month:'short'})}
+const mins=t=>{if(!t)return null;const [h,m]=t.split(':').map(Number);return h*60+m};
+function hrs(d){const a=mins(d.start),b=mins(d.finish);if(a==null||b==null||b<=a)return 0;return Math.max(0,(b-a-(+d.break||0))/60)}
+const fmt=n=>{const r=Math.round(n*100)/100;return (r%1===0?r.toFixed(1):String(r))};
+
+async function load(wk){
+  if(!token){$('main').innerHTML='<div class="empty">This page needs your own timesheet link. Open the link in this week\'s timesheet email from Electroseck.</div>';$('wkline').textContent='';return}
+  try{ data=await rpc('ts_get',{p_token:token,p_week:wk||null}); }
+  catch(e){ $('main').innerHTML='<div class="banner err">Couldn\'t load your timesheet. Check you have signal and refresh the page. ('+esc(e.message)+')</div>'; return; }
+  if(data.error){ $('main').innerHTML='<div class="banner err">This link isn\'t working. Ask Emma to send you a new one.</div>'; $('wkline').textContent=''; return; }
+  STD=data.std||STD; week=data.week_start; jobs=data.jobs||[];
+  const saved={}; (data.days||[]).forEach(d=>saved[d.date]=d);
+  st=NAMES.map((n,i)=>{const date=addDays(week,i), s=saved[date];
+    if(s) return {date,start:s.start||'',finish:s.finish||'',break:s.break||0,travel:+s.travel||0,jobs:(s.jobs&&s.jobs.length?s.jobs:[''])};
+    if(data.status!=='new') return {date,start:'',finish:'',break:0,travel:0,jobs:['']};
+    return i<5?{date,start:STD.start,finish:STD.finish,break:STD.break,travel:0,jobs:['']}:{date,start:'',finish:'',break:0,travel:0,jobs:['']};
+  });
+  dirty=false; render();
+}
+function render(){
+  const sat=addDays(week,5);
+  $('wkline').textContent='Week Mon '+nice(week)+' – Sat '+nice(sat)+' · due Tuesday';
+  let h='<p class="hello">G\'day '+esc(data.name)+'</p>';
+  if(data.status==='approved') h+='<div class="banner ok">Emma has already approved this week. If something\'s wrong, give her a call.</div>';
+  else if(data.status==='submitted') h+='<div class="banner ok">Sent to Emma '+new Date(data.submitted_at).toLocaleString('en-AU',{weekday:'short',hour:'numeric',minute:'2-digit'})+'. You can still fix it and send again until she approves it.</div>';
+  h+='<p class="explain">Weekdays start filled in at '+to12(STD.start)+' to '+to12(STD.finish)+' with a '+STD.break+' min break. Just fix any day that was different, write where you were, and tap Done. Start and finish are your work times. Put driving to far jobs (like Brisbane) before '+to12(STD.start)+' or after '+to12(STD.finish)+' in Travel hrs.</p>';
+  h+='<div class="weeknav"><button type="button" id="prev">← Earlier week</button><button type="button" id="next">Later week →</button></div>';
+  h+='<datalist id="jl">'+jobs.map(j=>'<option value="'+esc(j)+'">').join('')+'</datalist>';
+  const locked=data.status==='approved';
+  st.forEach((d,i)=>{
+    const hr=hrs(d),off=hr===0&&!+d.travel;
+    h+='<section class="day'+(off?' off':'')+'"><div class="dh"><h2>'+NAMES[i]+'<small>'+nice(d.date)+'</small></h2><span class="hrs">'+(off?'Not worked':fmt(hr)+' hrs')+(i===5&&!off?'<span class="tag">Sat</span>':'')+'</span></div>';
+    h+='<div class="row"><label class="f">Start<input type="time" id="s-'+i+'" data-i="'+i+'" data-k="start" value="'+esc(d.start)+'"'+(locked?' disabled':'')+'></label><label class="f">Finish<input type="time" id="f-'+i+'" data-i="'+i+'" data-k="finish" value="'+esc(d.finish)+'"'+(locked?' disabled':'')+'></label><label class="f">Break<select id="b-'+i+'" data-i="'+i+'" data-k="break"'+(locked?' disabled':'')+'>'+[0,15,30,45,60].map(v=>'<option value="'+v+'"'+(+d.break===v?' selected':'')+'>'+v+' min</option>').join('')+'</select></label></div>';
+    h+='<div class="row two"><label class="f">Travel hrs<div class="step"><button type="button" data-step="'+i+'" data-d="-0.5" aria-label="Less travel"'+(locked?' disabled':'')+'>−</button><input id="tr-'+i+'" inputmode="decimal" data-i="'+i+'" data-k="travel" value="'+d.travel+'"'+(locked?' disabled':'')+'><button type="button" data-step="'+i+'" data-d="0.5" aria-label="More travel"'+(locked?' disabled':'')+'>+</button></div></label><div class="tools">'+(i>0&&!locked?'<button type="button" data-same="'+i+'">Same as yesterday</button>':'')+(!locked?'<button type="button" data-clear="'+i+'">Day off</button>':'')+'</div></div>';
+    h+='<div class="jobs"><span class="jl">Where were you? Type anything, or pick a job</span>'+d.jobs.map((v,k)=>'<input list="jl" id="job-'+i+'-'+k+'" data-i="'+i+'" data-j="'+k+'" value="'+esc(v)+'" placeholder="Job number, site or address" aria-label="'+NAMES[i]+' place '+(k+1)+'"'+(locked?' disabled':'')+'>').join('')+(d.jobs.length<4&&!locked?'<button type="button" class="addjob" data-add="'+i+'">+ Another place</button>':'')+'</div>';
+    if(hr>0) h+='<p class="calc">'+to12(d.start)+' to '+to12(d.finish)+', less '+d.break+' min break = <b>'+fmt(hr)+' hrs</b>'+(+d.travel?' · plus <b>'+fmt(+d.travel)+' hrs</b> travel':'')+'</p>';
+    h+='</section>';
+  });
+  h+='<label class="f">Anything Emma should know? (optional)<textarea id="note" rows="2"'+(locked?' disabled':'')+'>'+esc(data.note||'')+'</textarea></label>';
+  $('main').innerHTML=h; $('foot').hidden=false; total();
+  $('done').disabled=locked; $('done').textContent=locked?'Approved':(data.status==='submitted'?'Send again to Emma':'Done – send to Emma'); $('done').classList.toggle('sent',locked);
+}
+function to12(t){if(!t)return'';let [h,m]=t.split(':').map(Number);const ap=h>=12?'pm':'am';h=h%12||12;return h+(m?':'+pad(m):'')+ap}
+function total(){let t=0,tr=0;st.forEach(d=>{t+=hrs(d);tr+=+d.travel||0});$('wk').textContent=fmt(t)+' hrs'+(tr?' + '+fmt(tr)+' travel':'');}
+document.addEventListener('change',e=>{const el=e.target;if(el.id==='note'){data.note=el.value;dirty=true;return}if(el.dataset.i==null)return;const i=+el.dataset.i;
+  if(el.dataset.j!=null) st[i].jobs[+el.dataset.j]=el.value;
+  else if(el.dataset.k==='travel') st[i].travel=Math.max(0,Math.min(16,parseFloat(el.value)||0));
+  else st[i][el.dataset.k]=el.dataset.k==='break'?+el.value:el.value;
+  dirty=true; if(el.dataset.j==null) render(); else total();});
+document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.id==='prev'||b.id==='next'){ if(dirty&&b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='Unsent changes – tap again';return} load(addDays(week,b.id==='prev'?-7:7)); return }
+  if(b.dataset.step!=null){const i=+b.dataset.step;st[i].travel=Math.max(0,Math.min(16,(+st[i].travel||0)+(+b.dataset.d)));dirty=true;render();return}
+  if(b.dataset.same!=null){const i=+b.dataset.same,p=st[i-1];Object.assign(st[i],{start:p.start||STD.start,finish:p.finish||STD.finish,break:p.break,travel:p.travel});if(!st[i].jobs.some(x=>x.trim()))st[i].jobs=p.jobs.slice();dirty=true;render();return}
+  if(b.dataset.clear!=null){const i=+b.dataset.clear;Object.assign(st[i],{start:'',finish:'',break:0,travel:0,jobs:['']});dirty=true;render();return}
+  if(b.dataset.add!=null){const i=+b.dataset.add;st[i].jobs.push('');render();const el=$('job-'+i+'-'+(st[i].jobs.length-1));if(el)el.focus();return}
+  if(b.id==='done'){
+    const worked=st.filter(d=>hrs(d)>0||+d.travel>0);
+    const noPlace=worked.filter(d=>!d.jobs.some(x=>x.trim()));
+    if(noPlace.length&&b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='No place on '+noPlace.length+' day(s) – tap to send anyway';return}
+    b.disabled=true;b.textContent='Sending…';
+    const days=st.filter(d=>d.start||d.finish||+d.travel||d.jobs.some(x=>x.trim())).map(d=>({date:d.date,start:d.start,finish:d.finish,break:+d.break||0,travel:+d.travel||0,jobs:d.jobs.filter(x=>x.trim())}));
+    try{const r=await rpc('ts_submit',{p_token:token,p_week:week,p_days:days,p_note:(data.note||'').trim()||null});
+      if(r.error){b.disabled=false;b.dataset.ok='';b.textContent=r.error==='already_approved'?'Already approved':'Try again';return}
+      data.status='submitted';data.submitted_at=r.submitted_at;dirty=false;render();$('done').textContent='Sent to Emma ✓';$('done').classList.add('sent');
+      window.scrollTo({top:0,behavior:'smooth'});
+    }catch(err){b.disabled=false;b.textContent='No signal? Tap to try again'}
+  }
+});
+addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
+load(null);
+})();
+</script>
+</body>
+</html>
