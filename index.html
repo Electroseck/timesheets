@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Cache-Control" content="no-cache">
 <title>Electroseck Timesheet</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
@@ -51,6 +52,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 .addjob{align-self:flex-start;font:600 14px var(--body);padding:6px 10px;border-radius:8px;border:1px dashed var(--line);background:transparent;color:var(--accent-ink);cursor:pointer}
 .tools{display:flex;gap:8px;flex-wrap:wrap;align-self:end}
 .tools button{font:600 13.5px var(--body);padding:8px 10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
+.lv select{border-color:var(--accent);font-weight:600}
 .calc{font-size:13px;color:var(--muted);margin:0}.calc b{color:var(--fg);font-weight:600}
 .tag{display:inline-block;font-family:var(--mono);font-size:11px;padding:1px 7px;border-radius:99px;background:var(--accent-soft);color:var(--accent-ink);margin-left:4px;vertical-align:1px}
 .foot{position:fixed;left:0;right:0;bottom:0;background:var(--head);color:#fff;padding-bottom:env(safe-area-inset-bottom,0px);z-index:5}
@@ -126,15 +128,15 @@ function render(){
   let h='<p class="hello">G\'day '+esc(data.name)+'</p>';
   if(data.status==='approved') h+='<div class="banner ok">Emma has already approved this week. If something\'s wrong, give her a call.</div>';
   else if(data.status==='submitted') h+='<div class="banner ok">Sent to Emma '+new Date(data.submitted_at).toLocaleString('en-AU',{weekday:'short',hour:'numeric',minute:'2-digit'})+'. You can still fix it and send again until she approves it.</div>';
-  h+='<p class="explain">Weekdays start filled in at '+to12(STD.start)+' to '+to12(STD.finish)+' with a '+STD.break+' min break. Just fix any day that was different, write where you were, and tap Done. Off sick, on holiday or took an unpaid day? Pick it under "Worked or day off?". Start and finish are your work times. Put driving to far jobs (like Brisbane) before '+to12(STD.start)+' or after '+to12(STD.finish)+' in Travel hrs.</p>';
+  h+='<p class="explain">Weekdays start filled in at '+to12(STD.start)+' to '+to12(STD.finish)+' with a '+STD.break+' min break. Just fix any day that was different, write where you were, and tap Done. Off sick, on holiday or took an unpaid day? Pick it in the "Day off?" box on that day. Start and finish are your work times. Put driving to far jobs (like Brisbane) before '+to12(STD.start)+' or after '+to12(STD.finish)+' in Travel hrs.</p>';
   h+='<div class="weeknav"><button type="button" id="prev">← Earlier week</button><button type="button" id="next">Later week →</button></div>';
   h+='<datalist id="jl">'+jobs.map(j=>'<option value="'+esc(j)+'">').join('')+'</datalist>';
   const locked=data.status==='approved';
   st.forEach((d,i)=>{
     const hr=hrs(d),off=hr===0&&!+d.travel;
-    const lsel='<label class="f">Worked or day off?<select id="lv-'+i+'" data-i="'+i+'" data-k="leave"'+(locked?' disabled':'')+'><option value=""'+(!d.leave?' selected':'')+'>Worked</option>'+Object.keys(LEAVE).map(k=>'<option value="'+k+'"'+(d.leave===k?' selected':'')+'>'+LEAVE[k]+'</option>').join('')+'</select></label>';
+    const lsel='<label class="f lv">Day off?<select id="lv-'+i+'" data-i="'+i+'" data-k="leave"'+(locked?' disabled':'')+'><option value=""'+(!d.leave?' selected':'')+'>No – worked</option>'+Object.keys(LEAVE).map(k=>'<option value="'+k+'"'+(d.leave===k?' selected':'')+'>'+LEAVE[k]+'</option>').join('')+'</select></label>';
     h+='<section class="day'+(off?' off':'')+'"><div class="dh"><h2>'+NAMES[i]+'<small>'+nice(d.date)+'</small></h2><span class="hrs">'+(d.leave?LEAVE[d.leave]:off?'Not worked':fmt(hr)+' hrs')+(i===5&&!off&&!d.leave?'<span class="tag">Sat</span>':'')+'</span></div>';
-    if(d.leave){h+=lsel+'<p class="calc">'+(d.leave==='unpaid'?'Emma won\'t pay this day.':'Emma will pay this as '+(d.leave==='sick'?'sick leave':'holiday pay')+'.')+' Change it back to Worked if that\'s wrong.</p></section>';return}
+    if(d.leave){h+=lsel+'<p class="calc">'+(d.leave==='unpaid'?'Emma won\'t pay this day.':'Emma will pay this as '+(d.leave==='sick'?'sick leave':'holiday pay')+'.')+' Change it back to "No – worked" if that\'s wrong.</p></section>';return}
     h+='<div class="row"><label class="f">Start<input type="time" id="s-'+i+'" data-i="'+i+'" data-k="start" value="'+esc(d.start)+'"'+(locked?' disabled':'')+'></label><label class="f">Finish<input type="time" id="f-'+i+'" data-i="'+i+'" data-k="finish" value="'+esc(d.finish)+'"'+(locked?' disabled':'')+'></label><label class="f">Break<select id="b-'+i+'" data-i="'+i+'" data-k="break"'+(locked?' disabled':'')+'>'+[0,15,30,45,60].map(v=>'<option value="'+v+'"'+(+d.break===v?' selected':'')+'>'+v+' min</option>').join('')+'</select></label></div>';
     h+='<div class="row two"><label class="f">Travel hrs<div class="step"><button type="button" data-step="'+i+'" data-d="-0.5" aria-label="Less travel"'+(locked?' disabled':'')+'>−</button><input id="tr-'+i+'" inputmode="decimal" data-i="'+i+'" data-k="travel" value="'+d.travel+'"'+(locked?' disabled':'')+'><button type="button" data-step="'+i+'" data-d="0.5" aria-label="More travel"'+(locked?' disabled':'')+'>+</button></div></label><div class="tools">'+(i>0&&!locked?'<button type="button" data-same="'+i+'">Same as yesterday</button>':'')+'</div></div>'+lsel;
     h+='<div class="jobs"><span class="jl">Where were you? Type anything, or pick a job</span>'+d.jobs.map((v,k)=>'<input list="jl" id="job-'+i+'-'+k+'" data-i="'+i+'" data-j="'+k+'" value="'+esc(v)+'" placeholder="Job number, site or address" aria-label="'+NAMES[i]+' place '+(k+1)+'"'+(locked?' disabled':'')+'>').join('')+(d.jobs.length<4&&!locked?'<button type="button" class="addjob" data-add="'+i+'">+ Another place</button>':'')+'</div>';
