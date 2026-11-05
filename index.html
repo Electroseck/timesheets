@@ -34,6 +34,8 @@ main{padding-block:16px 130px;display:flex;flex-direction:column;gap:12px}
 .banner.err{background:var(--accent-soft);color:var(--accent-ink);border:1px solid var(--accent)}
 .day{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
 .day.off{opacity:.8}
+.day.today{border:2px solid var(--accent)}
+.saved{font-family:var(--mono);font-size:11px;color:#CFC8C8}
 .dh{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .dh h2{font-family:var(--display);font-weight:400;font-size:20px;letter-spacing:.04em;text-transform:uppercase;margin:0}
 .dh h2 small{font-family:var(--body);text-transform:none;letter-spacing:0;font-size:13.5px;color:var(--muted);margin-left:6px}
@@ -79,7 +81,7 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 </main>
 
 <div class="foot" id="foot" hidden><div class="wrap">
-  <div class="tot"><span>Week total</span><b id="wk">0.0 hrs</b></div>
+  <div class="tot"><span>Week total <span class="saved" id="saved"></span></span><b id="wk">0.0 hrs</b></div>
   <button type="button" class="done" id="done">Done – send to Emma</button>
 </div></div>
 
@@ -117,25 +119,29 @@ async function load(wk){
   const saved={}; (data.days||[]).forEach(d=>saved[d.date]=d);
   st=NAMES.map((n,i)=>{const date=addDays(week,i), s=saved[date];
     if(s) return {date,start:s.start||'',finish:s.finish||'',break:s.break||0,travel:+s.travel||0,leave:s.leave||'',jobs:(s.jobs&&s.jobs.length?s.jobs:[''])};
-    if(data.status!=='new') return {date,start:'',finish:'',break:0,travel:0,leave:'',jobs:['']};
-    return i<5?{date,start:STD.start,finish:STD.finish,break:STD.break,travel:0,leave:'',jobs:['']}:{date,start:'',finish:'',break:0,travel:0,leave:'',jobs:['']};
+    const future=data.today&&date>data.today;
+    if((data.status==='submitted'||data.status==='approved')||future||i===5) return {date,start:'',finish:'',break:0,travel:0,leave:'',jobs:[''],future};
+    return {date,start:STD.start,finish:STD.finish,break:STD.break,travel:0,leave:'',jobs:['']};
   });
   dirty=false; render();
 }
 function render(){
   const sat=addDays(week,5);
-  $('wkline').textContent='Week Mon '+nice(week)+' – Sat '+nice(sat)+' · due Tuesday';
+  $('wkline').textContent='Week Mon '+nice(week)+' – Sat '+nice(sat)+' · send to Emma by 3pm Tuesday';
   let h='<p class="hello">G\'day '+esc(data.name)+'</p>';
   if(data.status==='approved') h+='<div class="banner ok">Emma has already approved this week. If something\'s wrong, give her a call.</div>';
+  else if(data.status==='draft') h+='<div class="banner ok" style="background:var(--panel);color:var(--fg);border-color:var(--line)">Saved as you go. Emma can\'t see it as finished until you tap Done.</div>';
   else if(data.status==='submitted') h+='<div class="banner ok">Sent to Emma '+new Date(data.submitted_at).toLocaleString('en-AU',{weekday:'short',hour:'numeric',minute:'2-digit'})+'. You can still fix it and send again until she approves it.</div>';
-  h+='<p class="explain">Weekdays start filled in at '+to12(STD.start)+' to '+to12(STD.finish)+' with a '+STD.break+' min break. Just fix any day that was different, write where you were, and tap Done. Off sick, on holiday or took an unpaid day? Pick it in the "Day off?" box on that day. Start and finish are your work times. Put driving to far jobs (like Brisbane) before '+to12(STD.start)+' or after '+to12(STD.finish)+' in Travel hrs.</p>';
+  h+='<p class="explain">Fill in each day as you go. It saves by itself, so just close it when you\'re done for the day. Days start filled in at '+to12(STD.start)+' to '+to12(STD.finish)+' with a '+STD.break+' min break, so fix anything different and write where you were. At the end of the week, tap Done to send it to Emma. Off sick, on holiday or took an unpaid day? Pick it in the "Day off?" box on that day. Start and finish are your work times. Put driving to far jobs (like Brisbane) before '+to12(STD.start)+' or after '+to12(STD.finish)+' in Travel hrs.</p>';
   h+='<div class="weeknav"><button type="button" id="prev">← Earlier week</button><button type="button" id="next">Later week →</button></div>';
   h+='<datalist id="jl">'+jobs.map(j=>'<option value="'+esc(j)+'">').join('')+'</datalist>';
   const locked=data.status==='approved';
   st.forEach((d,i)=>{
     const hr=hrs(d),off=hr===0&&!+d.travel;
     const lsel='<label class="f lv">Day off?<select id="lv-'+i+'" data-i="'+i+'" data-k="leave"'+(locked?' disabled':'')+'><option value=""'+(!d.leave?' selected':'')+'>No – worked</option>'+Object.keys(LEAVE).map(k=>'<option value="'+k+'"'+(d.leave===k?' selected':'')+'>'+LEAVE[k]+'</option>').join('')+'</select></label>';
-    h+='<section class="day'+(off?' off':'')+'"><div class="dh"><h2>'+NAMES[i]+'<small>'+nice(d.date)+'</small></h2><span class="hrs">'+(d.leave?LEAVE[d.leave]:off?'Not worked':fmt(hr)+' hrs')+(i===5&&!off&&!d.leave?'<span class="tag">Sat</span>':'')+'</span></div>';
+    const isToday=data.today===d.date;
+    if(d.future&&!d.start&&!d.leave&&!d.jobs.some(x=>x.trim())){h+='<section class="day off"><div class="dh"><h2>'+NAMES[i]+'<small>'+nice(d.date)+'</small></h2><span class="hrs">Coming up</span></div>'+(locked?'':'<button type="button" class="addjob" data-fill="'+i+'">Fill in this day</button>')+'</section>';return}
+    h+='<section class="day'+(off?' off':'')+(isToday?' today':'')+'"><div class="dh"><h2>'+NAMES[i]+'<small>'+nice(d.date)+(isToday?' · today':'')+'</small></h2><span class="hrs">'+(d.leave?LEAVE[d.leave]:off?'Not worked':fmt(hr)+' hrs')+(i===5&&!off&&!d.leave?'<span class="tag">Sat</span>':'')+'</span></div>';
     if(d.leave){h+=lsel+'<p class="calc">'+(d.leave==='unpaid'?'Emma won\'t pay this day.':'Emma will pay this as '+(d.leave==='sick'?'sick leave':'holiday pay')+'.')+' Change it back to "No – worked" if that\'s wrong.</p></section>';return}
     h+='<div class="row"><label class="f">Start<input type="time" id="s-'+i+'" data-i="'+i+'" data-k="start" value="'+esc(d.start)+'"'+(locked?' disabled':'')+'></label><label class="f">Finish<input type="time" id="f-'+i+'" data-i="'+i+'" data-k="finish" value="'+esc(d.finish)+'"'+(locked?' disabled':'')+'></label><label class="f">Break<select id="b-'+i+'" data-i="'+i+'" data-k="break"'+(locked?' disabled':'')+'>'+[0,15,30,45,60].map(v=>'<option value="'+v+'"'+(+d.break===v?' selected':'')+'>'+v+' min</option>').join('')+'</select></label></div>';
     h+='<div class="row two"><label class="f">Travel hrs<div class="step"><button type="button" data-step="'+i+'" data-d="-0.5" aria-label="Less travel"'+(locked?' disabled':'')+'>−</button><input id="tr-'+i+'" inputmode="decimal" data-i="'+i+'" data-k="travel" value="'+d.travel+'"'+(locked?' disabled':'')+'><button type="button" data-step="'+i+'" data-d="0.5" aria-label="More travel"'+(locked?' disabled':'')+'>+</button></div></label><div class="tools">'+(i>0&&!locked?'<button type="button" data-same="'+i+'">Same as yesterday</button>':'')+'</div></div>'+lsel;
@@ -149,23 +155,24 @@ function render(){
 }
 function to12(t){if(!t)return'';let [h,m]=t.split(':').map(Number);const ap=h>=12?'pm':'am';h=h%12||12;return h+(m?':'+pad(m):'')+ap}
 function total(){let t=0,tr=0,lv=0;st.forEach(d=>{t+=hrs(d);tr+=+d.travel||0;if(d.leave&&d.leave!=='unpaid')lv++});$('wk').textContent=fmt(t)+' hrs'+(tr?' + '+fmt(tr)+' travel':'')+(lv?' + '+lv+' leave day'+(lv>1?'s':''):'');}
-document.addEventListener('change',e=>{const el=e.target;if(el.id==='note'){data.note=el.value;dirty=true;return}if(el.dataset.i==null)return;const i=+el.dataset.i;
+document.addEventListener('change',e=>{const el=e.target;if(el.id==='note'){data.note=el.value;dirty=true;queueSave();return}if(el.dataset.i==null)return;const i=+el.dataset.i;
   if(el.dataset.j!=null) st[i].jobs[+el.dataset.j]=el.value;
   else if(el.dataset.k==='travel') st[i].travel=Math.max(0,Math.min(16,parseFloat(el.value)||0));
   else if(el.dataset.k==='leave'){st[i].leave=el.value; if(el.value){Object.assign(st[i],{start:'',finish:'',break:0,travel:0,jobs:['']})} else if(!st[i].start){Object.assign(st[i],{start:STD.start,finish:STD.finish,break:STD.break})}}
   else st[i][el.dataset.k]=el.dataset.k==='break'?+el.value:el.value;
-  dirty=true; if(el.dataset.j==null) render(); else total();});
+  dirty=true; if(el.dataset.j==null) render(); else total(); queueSave();});
 document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;
   if(b.id==='prev'||b.id==='next'){ if(dirty&&b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='Unsent changes – tap again';return} load(addDays(week,b.id==='prev'?-7:7)); return }
-  if(b.dataset.step!=null){const i=+b.dataset.step;st[i].travel=Math.max(0,Math.min(16,(+st[i].travel||0)+(+b.dataset.d)));dirty=true;render();return}
-  if(b.dataset.same!=null){const i=+b.dataset.same,p=st[i-1];Object.assign(st[i],{start:p.start||STD.start,finish:p.finish||STD.finish,break:p.break,travel:p.travel});if(!st[i].jobs.some(x=>x.trim()))st[i].jobs=p.jobs.slice();dirty=true;render();return}
+  if(b.dataset.step!=null){const i=+b.dataset.step;st[i].travel=Math.max(0,Math.min(16,(+st[i].travel||0)+(+b.dataset.d)));dirty=true;render();queueSave();return}
+  if(b.dataset.same!=null){const i=+b.dataset.same,p=st[i-1];Object.assign(st[i],{start:p.start||STD.start,finish:p.finish||STD.finish,break:p.break,travel:p.travel});if(!st[i].jobs.some(x=>x.trim()))st[i].jobs=p.jobs.slice();dirty=true;render();queueSave();return}
+  if(b.dataset.fill!=null){const i=+b.dataset.fill;Object.assign(st[i],{start:STD.start,finish:STD.finish,break:STD.break,future:false});dirty=true;render();queueSave();return}
   if(b.dataset.add!=null){const i=+b.dataset.add;st[i].jobs.push('');render();const el=$('job-'+i+'-'+(st[i].jobs.length-1));if(el)el.focus();return}
   if(b.id==='done'){
     const worked=st.filter(d=>hrs(d)>0||+d.travel>0);
     const noPlace=worked.filter(d=>!d.jobs.some(x=>x.trim()));
     if(noPlace.length&&b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='No place on '+noPlace.length+' day(s) – tap to send anyway';return}
     b.disabled=true;b.textContent='Sending…';
-    const days=st.filter(d=>d.leave||d.start||d.finish||+d.travel||d.jobs.some(x=>x.trim())).map(d=>({date:d.date,start:d.leave?'':d.start,finish:d.leave?'':d.finish,break:d.leave?0:(+d.break||0),travel:+d.travel||0,leave:d.leave||null,jobs:d.jobs.filter(x=>x.trim())}));
+    clearTimeout(saveT);const days=payload();
     try{const r=await rpc('ts_submit',{p_token:token,p_week:week,p_days:days,p_note:(data.note||'').trim()||null});
       if(r.error){b.disabled=false;b.dataset.ok='';b.textContent=r.error==='already_approved'?'Already approved':'Try again';return}
       data.status='submitted';data.submitted_at=r.submitted_at;dirty=false;render();$('done').textContent='Sent to Emma ✓';$('done').classList.add('sent');
@@ -173,6 +180,15 @@ document.addEventListener('click',async e=>{const b=e.target.closest('button');i
     }catch(err){b.disabled=false;b.textContent='No signal? Tap to try again'}
   }
 });
+function payload(){return st.filter(d=>d.leave||d.start||d.finish||+d.travel||d.jobs.some(x=>x.trim())).map(d=>({date:d.date,start:d.leave?'':d.start,finish:d.leave?'':d.finish,break:d.leave?0:(+d.break||0),travel:+d.travel||0,leave:d.leave||null,jobs:d.jobs.filter(x=>x.trim())}))}
+let saveT=null,saving=false;
+function queueSave(){if(!data||data.status==='approved')return;clearTimeout(saveT);$('saved').textContent='· saving…';saveT=setTimeout(saveNow,1200)}
+async function saveNow(){if(saving){queueSave();return}saving=true;
+  try{const r=await rpc('ts_save',{p_token:token,p_week:week,p_days:payload(),p_note:(data.note||'').trim()||null});
+    if(r.ok){dirty=false;if(data.status==='new')data.status=r.status;$('saved').textContent='· saved '+new Date().toLocaleTimeString('en-AU',{hour:'numeric',minute:'2-digit'});}
+    else $('saved').textContent='· not saved';
+  }catch(e){$('saved').textContent='· no signal, not saved yet'}finally{saving=false}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&dirty){clearTimeout(saveT);saveNow()}});
 addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}});
 load(null);
 })();
