@@ -126,15 +126,15 @@ dialog h3{margin:0;font-size:20px}
     <h2>Maximum demand</h2>
     <div class="box"><h3><i>1</i>Installation</h3>
       <div class="row">
-        <label class="f w">Type of installation<select id="md-app"><option value="house">House, unit or granny flat (single domestic)</option><option value="units">Block of living units</option><option value="nondom">Non-domestic (shops, offices, factories)</option></select></label>
+        <label class="f w">Type of installation<select id="md-app"><option value="house">House, unit or granny flat (single domestic) – Table C1</option><option value="units">Block of living units – Table C1</option><option value="hotel">Hotel, motel, boarding house, hospital – Table C2</option><option value="nondom">Factory, shop, office, school, church – Table C2</option></select></label>
         <div class="f w">Supply<div class="seg" id="md-sup" role="group" aria-label="Supply"><button type="button" data-v="1" aria-pressed="true">Single phase</button><button type="button" data-v="3" aria-pressed="false">Three phase</button></div></div>
         <label class="f">Main switch / supply per phase (A)<input id="md-rate" inputmode="decimal" value="63"></label>
         <label class="f">Description for the report<input id="md-title" placeholder="e.g. Main switchboard"></label>
       </div>
-      <p class="small warn" id="md-appwarn" hidden>Only single domestic is set up so far. Use jCalc for blocks of units and non-domestic until we add them.</p>
+      <p class="small warn" id="md-appwarn" hidden></p><p class="small">Blocks of units: enter living-unit loads as the number of units on each phase (three-phase units go in as single-phase units spread over R, W, B), then add the communal loads.</p>
     </div>
     <div class="box" id="md-box"><h3><i>2</i>Loads</h3>
-      <p class="small">One line per load. Lights and GPOs: number of points. Appliances: nameplate rating, how many, and duty (100% unless it never runs flat out).</p>
+      <p class="small">One line per load. Lights and GPOs: number of points. Unit loads: number of living units. Appliances: nameplate rating, how many, and duty (100% unless it never runs flat out). Largest/next/remaining rules are worked out for you.</p>
       <div id="md-rows" style="display:flex;flex-direction:column;gap:8px"><p class="small">Loading…</p></div>
       <div class="btns"><button type="button" class="btn ghost" id="md-add">+ Add load</button></div>
     </div>
@@ -428,70 +428,87 @@ $('cc-c').addEventListener('input',()=>{ccSizes();cc()});
 seg('cc-ph',cc);['cc-i','cc-u','cc-pf','cc-title','cc-s','cc-n','cc-e','cc-l','cc-m','cc-g','cc-t','cc-vd','cc-up','cc-cb','cc-cv','cc-ze'].forEach(id=>$(id).addEventListener('input',cc));
 
 /* =============== MAXIMUM DEMAND =============== */
-let MDrows=[],rid=0;
+const APPS={house:{codes:['C1-2'],label:'AS/NZS 3000:2018 Appendix C, Table C1 column 2 (single domestic)'},
+  units:{codes:['C1-3','C1-U'],label:'AS/NZS 3000:2018 Appendix C, Table C1 columns 3–5 (blocks of living units)'},
+  hotel:{codes:['C2-2'],label:'AS/NZS 3000:2018 Appendix C, Table C2 column 2 (residential institutions, hotels, motels)'},
+  nondom:{codes:['C2-3'],label:'AS/NZS 3000:2018 Appendix C, Table C2 column 3 (factories, shops, offices, schools)'}};
+const BAND=n=>n<=5?'C1-3':n<=20?'C1-4':'C1-5';
+const BANDTXT={'C1-3':'2–5 units','C1-4':'6–20 units','C1-5':'21+ units'};
+let MDrows=[],rid=0,mdApp='house';
+const mdGroups=()=>D.md.filter(g=>APPS[mdApp].codes.includes(g.t));
 function mdInit(){
   if(!loaded){$('md-rows').innerHTML='<p class="small warn">Couldn\'t load the load groups. Check your signal and refresh.</p>';return}
-  if(!MDrows.length)D.md.forEach(g=>MDrows.push(newRow(g.id)));
+  mdApp=$('md-app').value;MDrows=[];mdGroups().forEach(g=>MDrows.push(newRow(g.id)));
   mdDraw();
 }
-function newRow(gid){const g=D.md.find(x=>x.id===gid)||{};return {id:++rid,g:gid,desc:'',val:'',unit:g.kind==='points'?'pts':'A',qty:'1',duty:'100',ph:'R'}}
+function newRow(gid){const g=D.md.find(x=>x.id===gid)||{};return {id:++rid,g:gid,desc:'',val:'',unit:g.kind==='amps'?'A':'pts',qty:'1',duty:'100',ph:'R'}}
 function mdDraw(){
   const three=segv('md-sup')==='3';$('md-box').classList.toggle('three',three);
-  const gopts=sel=>D.md.map(g=>`<option value="${g.id}"${g.id===sel?' selected':''}>${esc(g.name)}</option>`).join('');
-  $('md-rows').innerHTML=MDrows.map(rw=>{const g=D.md.find(x=>x.id===rw.g)||{};const pts=g.kind==='points';
-    const ph=`<label class="f ph">Phase<select data-k="ph">${['R','W','B'].concat(pts?[]:['3Ø']).map(p=>`<option${rw.ph===p?' selected':''}>${p}</option>`).join('')}</select></label>`;
+  const gs=mdGroups();
+  const gopts=sel=>gs.map(g=>`<option value="${g.id}"${g.id===sel?' selected':''}>${esc(g.name)}</option>`).join('');
+  $('md-rows').innerHTML=MDrows.map(rw=>{const g=D.md.find(x=>x.id===rw.g)||{};const cnt=g.kind!=='amps';
+    const ph=`<label class="f ph">Phase<select data-k="ph">${['R','W','B'].concat(cnt?[]:['3Ø']).map(p=>`<option${rw.ph===p?' selected':''}>${p}</option>`).join('')}</select></label>`;
+    const lab=g.kind==='units'?'Living units':'Points';
     return `<div class="load" data-r="${rw.id}"><div class="hd"><select data-k="g" aria-label="Load group">${gopts(rw.g)}</select><span class="amt" id="mda-${rw.id}"></span><button type="button" class="x" data-del="${rw.id}" aria-label="Remove load">✕</button></div>
-    ${pts?`<div class="g pts"><label class="f desc">Description<input data-k="desc" value="${esc(rw.desc)}" placeholder="e.g. Whole house"></label><label class="f">Points<input data-k="val" value="${esc(rw.val)}" inputmode="numeric" placeholder="e.g. 30"></label>${ph}</div>`
+    ${cnt?`<div class="g pts"><label class="f desc">Description<input data-k="desc" value="${esc(rw.desc)}" placeholder="${g.kind==='units'?'e.g. Units 1–4':'e.g. Whole house'}"></label><label class="f">${lab}<input data-k="val" value="${esc(rw.val)}" inputmode="numeric" placeholder="e.g. ${g.kind==='units'?'4':'30'}"></label>${ph}</div>`
     :`<div class="g"><label class="f desc">Description<input data-k="desc" value="${esc(rw.desc)}" placeholder="e.g. Induction cooktop"></label><label class="f">Rating<input data-k="val" value="${esc(rw.val)}" inputmode="decimal" placeholder="e.g. 32"></label><label class="f">Unit<select data-k="unit">${['A','kW','W'].map(u=>`<option${rw.unit===u?' selected':''}>${u}</option>`).join('')}</select></label><label class="f">Qty<input data-k="qty" value="${esc(rw.qty)}" inputmode="numeric"></label>${ph}</div>
-      <div class="g" style="grid-template-columns:110px 1fr"><label class="f">Duty %<input data-k="duty" value="${esc(rw.duty)}" inputmode="decimal"></label><span class="small" style="align-self:end">${g.hint?esc(g.hint):''}${g.table_ref?' · '+esc(g.table_ref):''}</span></div>`}</div>`}).join('')||'<p class="small">No loads yet. Tap + Add load.</p>';
+      <div class="g" style="grid-template-columns:110px 1fr"><label class="f">Duty %<input data-k="duty" value="${esc(rw.duty)}" inputmode="decimal"></label><span class="small" style="align-self:end"></span></div>`}
+    <span class="small">${g.hint?esc(g.hint)+' ':''}${g.table_ref?'<b>'+esc(g.table_ref)+'</b>':''}</span></div>`}).join('')||'<p class="small">No loads yet. Tap + Add load.</p>';
   md();
 }
+function ruleCount(g,q){let a=+g.base_amps||0;const bu=g.base_units==null?0:+g.base_units;if(q>bu&&g.step_units&&g.step_amps)a+=Math.ceil((q-bu)/+g.step_units)*+g.step_amps;if(g.max_amps!=null)a=Math.min(a,+g.max_amps);return a}
+function ruleItems(g,items){const it=items.slice().sort((a,b)=>b-a);const p1=+g.pct,rest=g.pct_rest!=null?+g.pct_rest:g.pct_next!=null?+g.pct_next:p1,p2=g.pct_next!=null?+g.pct_next:rest;
+  let a=0;it.forEach((x,i)=>{a+=x*(i===0?p1:i===1?p2:rest)/100});a+=(+g.base_amps||0);if(g.max_amps!=null)a=Math.min(a,+g.max_amps);return a}
+const readyG=g=>g&&(g.kind==='amps'?(g.pct!=null||g.base_amps!=null):g.base_amps!=null);
 function md(){
   const three=segv('md-sup')==='3',phs=three?['R','W','B']:['R'];
-  $('md-appwarn').hidden=$('md-app').value==='house';
+  mdApp=$('md-app').value;$('md-appwarn').hidden=true;
   const acc={};const missing=new Set();let any=false;
   MDrows.forEach(rw=>{const g=D.md.find(x=>x.id===rw.g);if(!g)return;const v=n(rw.val);if(!v||v<=0)return;any=true;
-    acc[g.id]=acc[g.id]||{g,ph:{R:0,W:0,B:0},rows:[]};acc[g.id].rows.push(rw.id);
+    const key=g.key||('id'+g.id);acc[key]=acc[key]||{g,ph:{R:{q:0,it:[]},W:{q:0,it:[]},B:{q:0,it:[]}},rows:[]};acc[key].rows.push(rw.id);
     const tg=three?(rw.ph==='3Ø'?['R','W','B']:[rw.ph]):['R'];
-    const q=g.kind==='points'?v:ampsOf(v,rw.unit,three&&rw.ph==='3Ø')*(n(rw.qty)||1)*((n(rw.duty)??100)/100);
-    tg.forEach(p=>acc[g.id].ph[p]+=q)});
-  const tot={R:0,W:0,B:0},gAmt={},breakdown=[];
-  Object.values(acc).forEach(({g,ph})=>{
-    const ready=g.kind==='points'?g.base_amps!=null:(g.pct!=null||g.base_amps!=null);
-    const per={};
-    phs.forEach(p=>{const q=ph[p];if(!q)return;if(!ready){missing.add(g.name);return}
-      let a;if(g.kind==='points'){a=+g.base_amps||0;const bu=+g.base_units||0;if(q>bu&&g.step_units&&g.step_amps)a+=Math.ceil((q-bu)/+g.step_units)*+g.step_amps}
-      else a=g.pct!=null?q*(+g.pct)/100+(+g.base_amps||0):(+g.base_amps||0);
-      tot[p]+=a;per[p]=a;gAmt[g.id]=(gAmt[g.id]||0)+a});
-    breakdown.push([g.name,g.kind==='points'?phs.map(p=>ph[p]?r(ph[p],0)+' pts':'').filter(Boolean).join(' / '):phs.map(p=>ph[p]?r(ph[p],1)+' A':'').filter(Boolean).join(' / '),ready?phs.map(p=>per[p]!=null?r(per[p],1)+' A':'–'):phs.map(()=>'no figures')]);
+    if(g.kind==='amps'){const each=ampsOf(v,rw.unit,three&&rw.ph==='3Ø')*((n(rw.duty)??100)/100);const qn=Math.max(1,Math.round(n(rw.qty)||1));tg.forEach(p=>{for(let i=0;i<qn;i++)acc[key].ph[p].it.push(each)})}
+    else tg.forEach(p=>acc[key].ph[p].q+=v)});
+  const tot={R:0,W:0,B:0},gAmt={},gNote={},breakdown=[];
+  Object.entries(acc).forEach(([key,{g,ph}])=>{
+    const per={},used=new Set();let conn=[];
+    phs.forEach(p=>{const d=ph[p];const has=g.kind==='amps'?d.it.length:d.q;if(!has)return;
+      let gg=g;if(g.key&&/^C1-[345]$/.test(g.t)){const b=BAND(d.q);gg=D.md.find(x=>x.key===g.key&&x.t===b)||g;used.add(BANDTXT[b])}
+      if(!readyG(gg)){missing.add(g.name);return}
+      const a=gg.kind==='amps'?ruleItems(gg,d.it):ruleCount(gg,d.q);
+      tot[p]+=a;per[p]=a;gAmt[key]=(gAmt[key]||0)+a;
+      conn.push(g.kind==='amps'?r(d.it.reduce((s,x)=>s+x,0),1)+' A':r(d.q,0)+(g.kind==='units'?' units':' pts'))});
+    if(used.size)gNote[key]=[...used].join(', ');
+    breakdown.push([g.name+(gNote[key]?' ('+gNote[key]+')':''),conn.join(' / '),missing.has(g.name)?'no figures':phs.map(p=>per[p]!=null?r(per[p],1)+' A':'–').join(' / ')]);
   });
   MDrows.forEach(rw=>{const el=$('mda-'+rw.id);if(!el)return;const g=D.md.find(x=>x.id===rw.g);el.innerHTML=!n(rw.val)?'':missing.has(g&&g.name)?'<span class="warn">no figures</span>':''});
-  Object.values(acc).forEach(({g,rows})=>{const el=$('mda-'+rows[0]);if(el&&gAmt[g.id]!=null)el.textContent=r(gAmt[g.id],1)+' A'});
+  Object.entries(acc).forEach(([key,{rows}])=>{const el=$('mda-'+rows[0]);if(el&&gAmt[key]!=null)el.textContent=r(gAmt[key],1)+' A'});
   const rate=n($('md-rate').value),out=$('md-out');LAST.md=null;
   if(!any){out.innerHTML='<div class="res info"><h3>Result</h3><span>Fill in the loads above.</span></div>';return}
   const worst=Math.max(...phs.map(p=>tot[p])),ok=rate?worst<=rate:true,spread=three?Math.max(tot.R,tot.W,tot.B)-Math.min(tot.R,tot.W,tot.B):0;
   let h=`<div class="res ${missing.size?'info':ok?'ok':'bad'}"><h3>Result</h3><span class="verdict">${missing.size?'NOT COMPLETE':ok?'WITHIN THE SUPPLY':'OVER THE SUPPLY'}</span><span class="big">${r(worst,1)} A${three?' <span class="small">highest phase</span>':''}</span>`;
   if(three)h+=`<div class="chk"><span>R phase</span><span class="v">${r(tot.R,1)} A</span><span></span><span>W phase</span><span class="v">${r(tot.W,1)} A</span><span></span><span>B phase</span><span class="v">${r(tot.B,1)} A</span><span></span></div>${spread>10?'<span class="warn">Phases are more than 10 A apart – move a big load to the lightest phase.</span>':''}`;
   if(rate)h+=`<span>Against ${r(rate,0)} A per phase</span>`;
-  if(missing.size)h+=`<span class="warn">No Table C1 figures entered yet for: ${esc([...missing].join(', '))}. Those loads aren't counted.</span>`;
-  h+=`</div>`;
+  if(missing.size)h+=`<span class="warn">No table figures entered yet for: ${esc([...missing].join(', '))}. Those loads aren't counted.</span>`;
+  h+=`<span class="small">${esc(APPS[mdApp].label)}</span></div>`;
   out.innerHTML=h;
-  const loads=MDrows.filter(rw=>n(rw.val)>0).map(rw=>{const g=D.md.find(x=>x.id===rw.g)||{};return [g.name||'',rw.desc||'',g.kind==='points'?rw.val+' points':rw.val+' '+rw.unit+(+rw.qty>1?' × '+rw.qty:'')+(n(rw.duty)!=null&&+rw.duty!==100?' @ '+rw.duty+'%':''),three?rw.ph:'']});
+  const loads=MDrows.filter(rw=>n(rw.val)>0).map(rw=>{const g=D.md.find(x=>x.id===rw.g)||{};return [g.name||'',rw.desc||'',g.kind==='points'?rw.val+' points':g.kind==='units'?rw.val+' units':rw.val+' '+rw.unit+(+rw.qty>1?' × '+rw.qty:'')+(n(rw.duty)!=null&&+rw.duty!==100?' @ '+rw.duty+'%':''),three?rw.ph:'']});
   LAST.md={title:$('md-title').value.trim()||'Maximum demand',
-    inputs:[['Installation',opt($('md-app'))],['Supply',three?'Three phase':'Single phase'],['Main switch / supply',rate?rate+' A per phase':'–'],['Method','AS/NZS 3000:2018 Appendix C, Table C1 (single domestic)']],
+    inputs:[['Installation',opt($('md-app'))],['Supply',three?'Three phase':'Single phase'],['Main switch / supply',rate?rate+' A per phase':'–'],['Method',APPS[mdApp].label]],
     results:{ok:ok&&!missing.size,verdict:missing.size?'NOT COMPLETE':ok?'WITHIN THE SUPPLY':'OVER THE SUPPLY',headline:r(worst,1)+' A'+(three?' (highest phase)':''),
       lines:(three?[['R phase',r(tot.R,1)+' A'],['W phase',r(tot.W,1)+' A'],['B phase',r(tot.B,1)+' A']]:[['Maximum demand',r(tot.R,1)+' A']]).concat(rate?[['Supply / main switch',r(rate,0)+' A per phase']]:[]),
       table:{head:['Load group','Description','Load'].concat(three?['Phase']:[]),rows:loads.map(l=>three?l:l.slice(0,3))},
-      table2:{head:['Load group','Connected','Demand'+(three?' R / W / B':'')],rows:breakdown.map(b=>[b[0],b[1],b[2].join(' / ')])},
-      notes:['Demand per load group from AS/NZS 3000:2018 Appendix C Table C1 (single domestic) as entered by Electroseck.'].concat(missing.size?['Not counted (no table figures entered): '+[...missing].join(', ')+'.']:[])},
+      table2:{head:['Load group','Connected','Demand'+(three?' R / W / B':'')],rows:breakdown},
+      notes:['Demand per load group from '+APPS[mdApp].label+', figures as entered by Electroseck.'].concat(mdApp==='units'?['Living-unit loads use the column for the number of units on each phase (2–5, 6–20, 21+).']:[]).concat(missing.size?['Not counted (no table figures entered): '+[...missing].join(', ')+'.']:[])},
     summary:`${r(worst,1)} A ${three?'highest phase':''} – ${missing.size?'incomplete':ok?'within supply':'over supply'}`};
 }
 $('md-rows').addEventListener('input',e=>{const el=e.target.closest('[data-k]');if(!el)return;const rw=MDrows.find(x=>x.id===+el.closest('[data-r]').dataset.r);
-  if(el.dataset.k==='g'){const g=D.md.find(x=>x.id===+el.value);rw.g=+el.value;rw.unit=g&&g.kind==='points'?'pts':'A';if(rw.ph==='3Ø'&&g.kind==='points')rw.ph='R';mdDraw();return}
+  if(el.dataset.k==='g'){const g=D.md.find(x=>x.id===+el.value);rw.g=+el.value;rw.unit=g&&g.kind==='amps'?'A':'pts';if(rw.ph==='3Ø'&&g.kind!=='amps')rw.ph='R';mdDraw();return}
   rw[el.dataset.k]=el.value;md()});
 $('md-rows').addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;MDrows=MDrows.filter(x=>x.id!==+b.dataset.del);mdDraw()});
-$('md-add').addEventListener('click',()=>{if(!D.md.length)return;MDrows.push(newRow(D.md[D.md.length-1].id));mdDraw()});
-seg('md-sup',mdDraw);['md-rate','md-app','md-title'].forEach(id=>$(id).addEventListener('input',md));
+$('md-add').addEventListener('click',()=>{const gs=mdGroups();if(!gs.length)return;MDrows.push(newRow(gs[gs.length-1].id));mdDraw()});
+$('md-app').addEventListener('input',()=>{if(MDrows.some(rw=>n(rw.val))&&!confirm('Changing the installation type clears the loads. Carry on?')){$('md-app').value=mdApp;return}mdInit()});
+seg('md-sup',mdDraw);['md-rate','md-title'].forEach(id=>$(id).addEventListener('input',md));
 
 /* =============== FAULT LOOP =============== */
 $('ef-in').innerHTML=CBS.map(a=>`<option${a===20?' selected':''}>${a}</option>`).join('');
