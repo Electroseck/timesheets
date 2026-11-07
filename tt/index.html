@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>Electroseck Test &amp; Tag</title>
+<meta name="theme-color" content="#151313">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3F1F1; --panel:#FFFFFF; --fg:#161414; --muted:#6B6363; --line:#E2DDDD;
+  --accent:#DA1F26; --accent-ink:#8E1B1B; --accent-soft:#F7E3E3; --head:#151313; --ok:#1E7A4F; --ok-soft:#E3F2EA; --warn:#8A5A00; --warn-soft:#FBF0D9;
+  --display:'Anton',Impact,'Arial Narrow',sans-serif; --body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#121010; --panel:#1C1919; --fg:#F2EEEE; --muted:#A79E9E; --line:#2E2828; --accent:#EF4A4F; --accent-ink:#F07B72; --accent-soft:#2D1A1A; --head:#0A0909; --ok:#4CC08A; --ok-soft:#143024; --warn:#E8B860; --warn-soft:#2E2412; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;margin:0}
+.wrap{max-width:720px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--head);color:#fff;padding-block:18px 14px}
+header .wrap{display:flex;flex-direction:column;gap:6px}
+.brand{display:flex;align-items:center;gap:10px}
+.bolt{width:20px;height:26px;flex:none}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,7vw,38px);letter-spacing:.02em;text-transform:uppercase;margin:0;line-height:1}
+header p{margin:0;color:#CFC8C8;font-size:14.5px}
+main{padding-block:16px calc(56px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+h2{font-family:var(--display);font-weight:400;font-size:26px;letter-spacing:.03em;text-transform:uppercase;margin:0;line-height:1.05}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.back{font:inherit;font-weight:700;font-size:15px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
+.lead{margin:0;color:var(--muted);font-size:14.5px}
+.small{font-size:13px;color:var(--muted);margin:0}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.box>h3{margin:0;font-size:13px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:var(--accent)}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:460px){.row3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.f{display:flex;flex-direction:column;gap:4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;min-width:0}
+.f.w{grid-column:1/-1}
+input,select,textarea{font:inherit;font-size:17px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);width:100%;min-width:0;text-transform:none;letter-spacing:0;font-weight:400}
+textarea{min-height:220px;resize:vertical;line-height:1.5}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+.btn{font:inherit;font-weight:800;font-size:15.5px;padding:12px 16px;border-radius:12px;border:0;background:var(--accent);color:#fff;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn.ghost{background:var(--panel);color:var(--fg);border:1px solid var(--line)}
+.btn.wide{width:100%;padding:16px;font-size:18px}
+.btn:disabled{opacity:.6}
+.btn:focus-visible,.back:focus-visible,.site:focus-visible,.chip:focus-visible,tr[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#q{font-size:16px}
+.sites{display:flex;flex-direction:column;gap:10px}
+.site{display:flex;flex-direction:column;gap:4px;text-align:left;font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:14px;padding:14px 16px;cursor:pointer;width:100%}
+.site b{font-size:18px;font-weight:800;line-height:1.2}
+.site .ad{color:var(--muted);font-size:14.5px}
+.site .st{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:13.5px;margin-top:2px}
+.due{font-weight:800}.due.over{color:var(--accent)}.due.soon{color:var(--warn)}.due.ok{color:var(--ok)}
+.regs{display:flex;flex-direction:column}
+.reg{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font:inherit;color:var(--fg);background:none;border-left:0;border-right:0;border-top:0;text-align:left;cursor:pointer;width:100%}
+.reg:last-child{border-bottom:0}
+.reg b{font-weight:800}.reg span{color:var(--muted);font-size:14px}
+.pill{display:inline-block;font-weight:800;font-size:12.5px;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.P{background:var(--ok-soft);color:var(--ok)}.pill.F{background:var(--accent-soft);color:var(--accent-ink)}.pill.N{background:var(--warn-soft);color:var(--warn)}
+.pill.pend{background:var(--warn-soft);color:var(--warn)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font:inherit;font-size:14px;font-weight:600;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;text-align:left}
+.mic{font:inherit;font-weight:800;font-size:17px;padding:14px;border-radius:12px;border:2px solid var(--accent);background:var(--panel);color:var(--accent);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.mic.on{background:var(--accent);color:#fff}
+.mic .dot{width:12px;height:12px;border-radius:50%;background:currentColor}
+.mic.on .dot{animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.25}}
+@media (prefers-reduced-motion:reduce){.mic.on .dot{animation:none}}
+.note{border-radius:12px;padding:12px 14px;font-size:14.5px}
+.note.warn{background:var(--warn-soft);border:1px solid var(--warn)}
+.note.bad{background:var(--accent-soft);border:1px solid var(--accent)}
+.note.ok{background:var(--ok-soft);border:1px solid var(--ok)}
+.note ul{margin:6px 0 0;padding-left:18px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media (max-width:420px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stats div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column}
+.stats b{font-family:var(--mono);font-size:24px;font-weight:500;line-height:1.1}
+.stats span{font-size:12.5px;color:var(--muted)}
+.grp{font-size:13px;letter-spacing:.06em;text-transform:uppercase;font-weight:800;color:var(--muted);margin:10px 0 2px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:6px;border-bottom:1px solid var(--line)}
+td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+td.tag{font-family:var(--mono);font-size:13.5px;white-space:nowrap}
+td.d small{display:block;color:var(--muted);font-size:12.5px}
+td.r{white-space:nowrap;text-align:right}
+tr[tabindex]{cursor:pointer}
+tr.new td:first-child{box-shadow:inset 4px 0 0 var(--ok)}
+tr.changed td:first-child{box-shadow:inset 4px 0 0 var(--warn)}
+tr.not_due td{color:var(--muted)}
+.key{display:flex;gap:6px 14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+dialog{border:0;border-radius:16px;padding:0;max-width:520px;width:calc(100% - 32px);background:var(--panel);color:var(--fg)}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+dialog .in{padding:18px;display:flex;flex-direction:column;gap:12px}
+dialog h3{margin:0;font-size:20px}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;font:inherit;font-weight:700;font-size:15px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.spin{display:flex;flex-direction:column;align-items:center;gap:12px;padding:40px 10px;text-align:center}
+.spin i{width:34px;height:34px;border-radius:50%;border:4px solid var(--line);border-top-color:var(--accent);animation:rot 1s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.msg{color:var(--muted);text-align:center;padding:30px 10px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="brand"><svg class="bolt" viewBox="0 0 24 30" aria-hidden="true"><path d="M15 0 3 17h8l-3 13 13-18h-8z" fill="#DA1F26"/></svg><h1>Test &amp; Tag</h1></div>
+  <p id="hdr">Pick the site, see the last register, then talk it through.</p>
+</div></header>
+
+<main class="wrap">
+  <div id="status" class="msg">Loading sites…</div>
+
+  <!-- HOME -->
+  <section id="v-home" hidden style="display:flex;flex-direction:column;gap:12px">
+    <button type="button" class="btn wide" id="newSiteBtn">+ New site</button>
+    <label class="f" for="q">Find a site<input id="q" type="search" placeholder="Client, address or tag number" autocomplete="off"></label>
+    <div class="sites" id="sites"></div>
+  </section>
+
+  <!-- NEW SITE -->
+  <section id="v-new" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="top"><button type="button" class="back" data-go="home">← Sites</button></div>
+    <h2>New site</h2>
+    <div class="box">
+      <label class="f w">Client<input id="n-client" placeholder="e.g. Gallo Build / YTB Plumbing"></label>
+      <label class="f w">Site address<input id="n-address" placeholder="e.g. 1199 Gold Coast Hwy, Palm Beach"></label>
+      <div class="row">
+        <label class="f">Builder (if any)<input id="n-builder"></label>
+        <label class="f">Job number<input id="n-job" inputmode="numeric"></label>
+      </div>
+    </div>
+    <button type="button" class="btn wide" id="newSiteGo">Next: talk it through</button>
+  </section>
+
+  <!-- SITE -->
+  <section id="v-site" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="top"><button type="button" class="back" data-go="home">← Sites</button></div>
+    <div><h2 id="s-name"></h2><p class="lead" id="s-addr"></p></div>
+    <button type="button" class="btn wide" id="startBtn">Start today’s test</button>
+    <div class="box" id="s-latest"></div>
+    <div class="box"><h3>All registers for this site</h3><div class="regs" id="s-regs"></div></div>
+  </section>
+
+  <!-- NARRATE -->
+  <section id="v-narr" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="top"><button type="button" class="back" id="narrBack">← Back</button></div>
+    <div><h2>Talk it through</h2><p class="lead" id="nr-site"></p></div>
+    <div class="box">
+      <div class="row3">
+        <label class="f">Test date<input id="nr-date" type="date"></label>
+        <label class="f">Tested by<input id="nr-tech"></label>
+        <label class="f">Usual interval<select id="nr-int"><option value="3">3 months</option><option value="6">6 months</option><option value="12">12 months</option><option value="24">2 years</option><option value="60">5 years</option></select></label>
+      </div>
+    </div>
+    <div class="note ok" id="nr-prev" hidden></div>
+    <div class="chips" id="nr-chips"></div>
+    <button type="button" class="mic" id="micBtn" hidden><span class="dot"></span><span id="micTxt">Tap to record</span></button>
+    <label class="f w" for="nr-text">What you tested<textarea id="nr-text" placeholder="Tap the mic on your keyboard and talk, e.g.&#10;&#10;Site office: computer tag 173818 pass, power board 173819 pass…&#10;Field gear: 6 leads tags 173850 to 173855 all pass, Makita drop saw 173856 failed, cord damaged, tagged out."></textarea></label>
+    <p class="small">Say the area, then each item with its tag number and pass or fail. For a retest you can just say what’s different from last time.</p>
+    <button type="button" class="btn wide" id="buildBtn">Build the register</button>
+  </section>
+
+  <!-- WORKING -->
+  <section id="v-work" hidden><div class="spin"><i></i><b>Building the register…</b><span class="small">Usually 10–30 seconds. Keep this screen open.</span></div></section>
+
+  <!-- REVIEW -->
+  <section id="v-rev" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="top"><button type="button" class="back" id="revBack">← Edit what I said</button></div>
+    <div><h2>Check it over</h2><p class="lead" id="rv-site"></p></div>
+    <div class="stats" id="rv-stats"></div>
+    <div id="rv-warn"></div>
+    <div class="key"><span><i style="background:var(--ok)"></i>New</span><span><i style="background:var(--warn)"></i>Changed from last time</span><span><i style="background:var(--line)"></i>Not due, carried over</span></div>
+    <p class="small">Tap any line to fix it.</p>
+    <div id="rv-items"></div>
+    <button type="button" class="btn ghost" id="addItem">+ Add an item</button>
+    <div id="rv-removed"></div>
+    <button type="button" class="btn wide" id="saveBtn">Save register</button>
+  </section>
+
+  <!-- FAILED AI -->
+  <section id="v-fail" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="note bad" id="fl-msg"></div>
+    <button type="button" class="btn wide" id="flRetry">Try again</button>
+    <button type="button" class="btn ghost" id="flSave">Save what I said for Dayne to finish</button>
+    <button type="button" class="btn ghost" id="flBack">← Edit what I said</button>
+  </section>
+
+  <!-- DONE -->
+  <section id="v-done" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="note ok" id="dn-msg"></div>
+    <a class="btn wide" id="dnPdf" target="_blank" rel="noopener">Open the register (print / PDF)</a>
+    <button type="button" class="btn ghost" data-go="home">Back to sites</button>
+  </section>
+
+  <!-- VIEW OLD REGISTER -->
+  <section id="v-reg" hidden style="display:flex;flex-direction:column;gap:12px">
+    <div class="top"><button type="button" class="back" id="regBack">← Site</button><a class="btn ghost" id="regPdf" target="_blank" rel="noopener">Print / PDF</a></div>
+    <div><h2 id="rg-h"></h2><p class="lead" id="rg-sub"></p></div>
+    <div class="stats" id="rg-stats"></div>
+    <div id="rg-items"></div>
+  </section>
+</main>
+
+<dialog id="itemDlg"><form class="in" method="dialog" id="itemForm">
+  <h3 id="it-h">Item</h3>
+  <div class="row">
+    <label class="f">Tag number<input id="it-tag" inputmode="numeric"></label>
+    <label class="f">Location<input id="it-loc"></label>
+    <label class="f w">Description<input id="it-desc"></label>
+    <label class="f w">Section<input id="it-grp" list="grpList" placeholder="e.g. Field equipment"></label>
+  </div>
+  <div class="f">Result<div class="seg" id="it-res"><button type="button" data-v="P">Pass</button><button type="button" data-v="F">Fail</button><button type="button" data-v="N">Not sighted</button></div></div>
+  <div class="row">
+    <label class="f">Interval<select id="it-int"><option value="3">3 months</option><option value="6">6 months</option><option value="12">12 months</option><option value="24">2 years</option><option value="60">5 years</option></select></label>
+    <label class="f">Test date<input id="it-date" type="date"></label>
+    <label class="f w">Notes<input id="it-notes" placeholder="e.g. cord damaged, tagged out"></label>
+  </div>
+  <div class="btns"><button class="btn" value="ok">Save line</button><button class="btn ghost" value="cancel" formnovalidate>Cancel</button><button class="btn ghost" value="del" id="it-del" formnovalidate style="margin-left:auto;color:var(--accent)">Remove line</button></div>
+</form></dialog>
+<datalist id="grpList"></datalist>
+
+<script>
+(function(){
+const BASE='https://refvgqfirhjfxsatyuto.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlZnZncWZpcmhqZnhzYXR5dXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNjAyMzEsImV4cCI6MjEwNjgzNjIzMX0.cYUkiH-V5Gj86m_l5D9yyPYhzJIwINxHa9Kiz_oyuhI';
+const H={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+let token=new URLSearchParams(location.search).get('t')||'';
+if(token)store.set('es_token',token);else token=store.get('es_token')||'';
+
+async function rpc(fn,body){
+  const r=await fetch(BASE+'/rest/v1/rpc/'+fn,{method:'POST',headers:H,body:JSON.stringify(Object.assign({p_token:token},body||{}))});
+  const t=await r.text();let j=null;try{j=JSON.parse(t)}catch(e){}
+  if(!r.ok){const m=(j&&(j.message||j.error))||t||'error';throw new Error(m)}
+  return j;
+}
+const today=()=>{const d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+const fd=s=>{if(!s)return '';const [y,m,d]=String(s).slice(0,10).split('-');return d+'/'+m+'/'+y};
+function addMonths(iso,m){const [y,mo,d]=iso.split('-').map(Number);const t=new Date(Date.UTC(y,mo-1+m,1));const last=new Date(Date.UTC(t.getUTCFullYear(),t.getUTCMonth()+1,0)).getUTCDate();t.setUTCDate(Math.min(d,last));return t.toISOString().slice(0,10)}
+function dueCls(iso){if(!iso)return '';const days=(new Date(iso)-new Date(today()))/864e5;return days<0?'over':days<=30?'soon':'ok'}
+function dueTxt(iso){if(!iso)return 'No due date';const days=Math.round((new Date(iso)-new Date(today()))/864e5);return days<0?`Overdue since ${fd(iso)}`:days===0?'Due today':`Next due ${fd(iso)}`}
+const RES={P:'Pass',F:'Fail',N:'Not sighted'};
+const reportUrl=id=>'report.html?r='+encodeURIComponent(id);
+
+/* ---------- views ---------- */
+const VIEWS=['home','new','site','narr','work','rev','fail','done','reg'];
+function show(v){$('status').hidden=true;VIEWS.forEach(x=>$('v-'+x).hidden=x!==v);window.scrollTo(0,0);if(v!=='narr')stopMic()}
+document.addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){if(g.dataset.go==='home')loadSites();else show(g.dataset.go)}});
+function fail(msg){$('status').hidden=false;$('status').innerHTML=msg;VIEWS.forEach(x=>$('v-'+x).hidden=true)}
+
+let ME='',SITES=[],SITE=null,LATEST=null,NEWSITE=null,ITEMS=[],REMOVED=[],WARN=[],NARR='';
+
+/* ---------- home ---------- */
+async function loadSites(){
+  if(!token){fail('Open this page from your own Electroseck crew link (the one with <b>?t=</b> on the end). Ask Dayne if you don’t have it.');return}
+  try{
+    const j=await rpc('tt_sites_list');ME=j.me||'';SITES=j.sites||[];
+    $('hdr').textContent=ME?`G’day ${ME.split(' ')[0]}. Pick the site, see the last register, then talk it through.`:$('hdr').textContent;
+    drawSites();show('home');
+  }catch(e){fail(/bad_link/.test(e.message)?'This link isn’t working. Ask Dayne for your crew link.':'Couldn’t load the sites. Check your signal and refresh.')}
+}
+function drawSites(){
+  const t=$('q').value.trim().toLowerCase();
+  const list=SITES.filter(s=>!t||[s.client,s.address,s.builder,s.job_no].join(' ').toLowerCase().includes(t));
+  $('sites').innerHTML=list.length?list.map(s=>`<button type="button" class="site" data-site="${esc(s.id)}">
+    <b>${esc(s.client||s.address)}</b><span class="ad">${esc(s.client?s.address:'')}${s.builder?' · Builder: '+esc(s.builder):''}</span>
+    <span class="st"><span class="due ${dueCls(s.next_due)}">${s.last_tested?esc(dueTxt(s.next_due)):'Not tested yet'}</span>${s.last_tested?`<span>Last tested ${fd(s.last_tested)}</span><span>${s.items} items</span>`:''}</span></button>`).join('')
+    :`<p class="msg">${SITES.length?'No site matches that. Try part of the address, or add a new site.':'No sites yet. Tap New site to start one.'}</p>`;
+}
+$('q').addEventListener('input',drawSites);
+$('sites').addEventListener('click',e=>{const b=e.target.closest('[data-site]');if(b)openSite(b.dataset.site)});
+$('newSiteBtn').onclick=()=>{['n-client','n-address','n-builder','n-job'].forEach(i=>$(i).value='');show('new');$('n-client').focus()};
+$('newSiteGo').onclick=()=>{
+  const ns={client:$('n-client').value.trim(),address:$('n-address').value.trim(),builder:$('n-builder').value.trim(),job_no:$('n-job').value.trim()};
+  if(!ns.client&&!ns.address){$('n-client').focus();return}
+  SITE=null;LATEST=null;NEWSITE=ns;startNarr();
+};
+
+/* ---------- site ---------- */
+let SITEDATA=null;
+async function openSite(id){
+  fail('Loading…');
+  try{
+    const j=await rpc('tt_site_get',{p_site:id});SITEDATA=j;SITE=j.site;LATEST=j.latest;NEWSITE=null;
+    $('s-name').textContent=SITE.client||SITE.address;$('s-addr').textContent=(SITE.client?SITE.address:'')+(SITE.builder?' · Builder: '+SITE.builder:'')+(SITE.job_no?' · Job '+SITE.job_no:'');
+    if(LATEST){
+      const its=LATEST.items||[];const f=its.filter(i=>i.result==='F').length;
+      const nd=its.filter(i=>i.result==='P'&&i.due_date).map(i=>i.due_date).sort()[0];
+      $('s-latest').innerHTML=`<h3>Last register</h3><p style="margin:0"><b>${fd(LATEST.tested_on)}</b> · ${esc(LATEST.technician)} · ${its.length} items${f?` · <span style="color:var(--accent)">${f} failed</span>`:''}</p>
+        <p style="margin:0" class="due ${dueCls(nd)}">${esc(dueTxt(nd))}</p>
+        <div class="btns"><button type="button" class="btn ghost" data-reg="${esc(LATEST.id)}">See every item</button><a class="btn ghost" href="${reportUrl(LATEST.id)}" target="_blank" rel="noopener">Print / PDF</a></div>`;
+    }else $('s-latest').innerHTML='<h3>Last register</h3><p class="small">No register for this site yet. Today’s will be the first.</p>';
+    const regs=j.registers||[];
+    $('s-regs').innerHTML=regs.length?regs.map(r=>`<button type="button" class="reg" data-reg="${esc(r.id)}"><span><b>${fd(r.tested_on)}</b> · ${esc(r.technician)}</span><span>${r.status==='pending'?'<span class="pill pend">Waiting on Dayne</span>':`${r.items} items${r.failed?` · ${r.failed} failed`:''}`}</span></button>`).join(''):'<p class="small">None yet.</p>';
+    show('site');
+  }catch(e){fail('Couldn’t open that site. Check your signal and try again.')}
+}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-reg]');if(b)openReg(b.dataset.reg)});
+$('startBtn').onclick=startNarr;
+
+/* ---------- old register ---------- */
+async function openReg(id){
+  fail('Loading…');
+  try{
+    const r=await rpc('tt_register_get',{p_reg:id});
+    $('rg-h').textContent='Register '+fd(r.tested_on);
+    $('rg-sub').textContent=(r.site.client||r.site.address)+' · '+r.technician+(r.status==='pending'?' · waiting on Dayne to finish':'');
+    $('regPdf').href=reportUrl(id);$('regPdf').hidden=r.status==='pending';
+    $('rg-stats').innerHTML=statHtml(r.items);
+    $('rg-items').innerHTML=r.status==='pending'?`<div class="box"><h3>What was said</h3><p style="margin:0;white-space:pre-wrap">${esc(r.narration)}</p></div>`:itemsHtml(r.items,false);
+    show('reg');
+  }catch(e){fail('Couldn’t open that register.')}
+}
+$('regBack').onclick=()=>SITE?show('site'):loadSites();
+
+/* ---------- narrate ---------- */
+function startNarr(){
+  const key='es_tt_draft_'+(SITE?SITE.id:'new');
+  $('nr-site').textContent=SITE?(SITE.client||SITE.address)+(SITE.client?' · '+SITE.address:''):(NEWSITE.client||NEWSITE.address)+' (new site)';
+  $('nr-date').value=today();$('nr-tech').value=ME;
+  const its=LATEST?LATEST.items||[]:[];
+  const iv=its.length?Math.min(...its.map(i=>i.interval_months)):3;$('nr-int').value=String([3,6,12,24,60].includes(iv)?iv:3);
+  if(LATEST){
+    const groups=[...new Set(its.map(i=>i.grp).filter(Boolean))];
+    $('nr-prev').hidden=false;
+    $('nr-prev').innerHTML=`Last time (${fd(LATEST.tested_on)}) had <b>${its.length} items</b>${groups.length?': '+groups.map(esc).join(', '):''}. If it’s mostly the same, just say what’s changed.`;
+    const chips=['Same as last time, everything passed.','Everything from last time is still here and passed, plus these new items: ','Only retested the field gear today, the sheds aren’t due.','These have gone off site: ','Couldn’t find these: '];
+    $('nr-chips').innerHTML=chips.map(c=>`<button type="button" class="chip" data-chip="${esc(c)}">${esc(c)}</button>`).join('');
+  }else{$('nr-prev').hidden=true;$('nr-chips').innerHTML=`<button type="button" class="chip" data-chip="Tags start at ">Tags start at …</button><button type="button" class="chip" data-chip="Construction site. ">Construction site</button>`}
+  $('nr-text').value=store.get(key)||'';$('nr-text').dataset.key=key;
+  show('narr');
+}
+$('nr-chips').addEventListener('click',e=>{const c=e.target.closest('[data-chip]');if(!c)return;const t=$('nr-text');t.value=(t.value&&!/\s$/.test(t.value)?t.value+'\n':t.value)+c.dataset.chip;saveDraft();t.focus();t.setSelectionRange(t.value.length,t.value.length)});
+function saveDraft(){const k=$('nr-text').dataset.key;if(k)store.set(k,$('nr-text').value)}
+$('nr-text').addEventListener('input',saveDraft);
+$('narrBack').onclick=()=>{stopMic();SITE?show('site'):show('new')};
+
+/* speech (where the phone browser supports it; the keyboard mic always works) */
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;let rec=null,recOn=false,base='';
+if(SR){$('micBtn').hidden=false}
+function stopMic(){if(rec&&recOn){recOn=false;try{rec.stop()}catch(e){}}$('micBtn').classList.remove('on');$('micTxt').textContent='Tap to record'}
+$('micBtn').onclick=()=>{
+  if(recOn){stopMic();return}
+  rec=new SR();rec.lang='en-AU';rec.continuous=true;rec.interimResults=true;
+  const t=$('nr-text');base=t.value&&!/\s$/.test(t.value)?t.value+' ':t.value;
+  rec.onresult=ev=>{let fin='',tmp='';for(let i=ev.resultIndex;i<ev.results.length;i++){const s=ev.results[i][0].transcript;if(ev.results[i].isFinal)fin+=s+' ';else tmp+=s}
+    if(fin){base+=fin;saveDraft()}t.value=base+tmp;};
+  rec.onerror=ev=>{if(ev.error==='not-allowed'){stopMic();alert('The microphone is blocked for this page. Use the mic on your keyboard instead.')}};
+  rec.onend=()=>{if(recOn){try{rec.start()}catch(e){stopMic()}}else{$('nr-text').value=base;saveDraft()}};
+  try{rec.start();recOn=true;$('micBtn').classList.add('on');$('micTxt').textContent='Recording… tap to stop'}catch(e){stopMic()}
+};
+
+/* ---------- build ---------- */
+$('buildBtn').onclick=build;$('flRetry').onclick=build;
+$('flBack').onclick=()=>show('narr');$('revBack').onclick=()=>show('narr');
+async function build(){
+  stopMic();NARR=$('nr-text').value.trim();
+  if(NARR.length<5){$('nr-text').focus();return}
+  show('work');
+  try{
+    const r=await fetch(BASE+'/functions/v1/tt-parse',{method:'POST',headers:H,body:JSON.stringify({token,site_id:SITE?SITE.id:null,narration:NARR,tested_on:$('nr-date').value||today(),default_interval:+$('nr-int').value})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.items){throw new Error(j.error||('http_'+r.status))}
+    ITEMS=j.items;REMOVED=j.removed||[];WARN=j.warnings||[];
+    if(j.technician&&!$('nr-tech').value.trim())$('nr-tech').value=j.technician;
+    if(!ITEMS.length&&!REMOVED.length){WARN.unshift('Nothing came through as items. Check what you said and try again.')}
+    drawReview();show('rev');
+  }catch(e){
+    const m=String(e.message||'');
+    $('fl-msg').innerHTML=m==='not_setup'?'The register builder isn’t switched on yet. Save what you said and Dayne will finish it.'
+      :m==='limit'?'That’s a lot of registers today. Save what you said and Dayne will finish it.'
+      :m==='bad_link'?'Your link isn’t working. Ask Dayne for your crew link.'
+      :'Couldn’t build the register just now (no signal, or it took too long). Try again, or save what you said for Dayne.';
+    show('fail');
+  }
+}
+
+/* ---------- review ---------- */
+function statHtml(items){
+  const c=k=>items.filter(i=>i.result===k).length;
+  return `<div><b>${items.length}</b><span>Items</span></div><div><b>${c('P')}</b><span>Passed</span></div><div><b style="${c('F')?'color:var(--accent)':''}">${c('F')}</b><span>Failed</span></div><div><b>${c('N')}</b><span>Not sighted</span></div>`;
+}
+function itemsHtml(items,edit){
+  const groups=[];items.forEach((it,i)=>{let g=groups.find(x=>x.name===it.grp);if(!g){g={name:it.grp,rows:[]};groups.push(g)}g.rows.push([it,i])});
+  return groups.map(g=>`${g.name?`<p class="grp">${esc(g.name)}</p>`:''}<div class="tw"><table><thead><tr><th>Tag</th><th>Item</th><th style="text-align:right">Result</th></tr></thead><tbody>${
+    g.rows.map(([it,i])=>`<tr class="${edit?esc(it.change||''):''}" ${edit?`tabindex="0" data-i="${i}"`:''}><td class="tag">${it.tag?esc(it.tag):'<span style="color:var(--accent)">no tag</span>'}</td>
+      <td class="d">${esc(it.description)}<small>${esc(it.location)}${it.notes?' · '+esc(it.notes):''}${it.change==='not_due'?' · not due, last tested '+fd(it.test_date):''}</small></td>
+      <td class="r"><span class="pill ${esc(it.result)}">${RES[it.result]||esc(it.result)}</span><small style="display:block;color:var(--muted);font-size:12px;margin-top:3px">${it.due_date?'Due '+fd(it.due_date):''}</small></td></tr>`).join('')
+  }</tbody></table></div>`).join('')||'<p class="msg">No items.</p>';
+}
+function drawReview(){
+  $('rv-site').textContent=$('nr-site').textContent+' · '+fd($('nr-date').value);
+  $('rv-stats').innerHTML=statHtml(ITEMS);
+  const noTag=ITEMS.filter(i=>!i.tag&&i.result!=='N').length;
+  const w=WARN.slice();if(noTag)w.push(`${noTag} item${noTag>1?'s have':' has'} no tag number. Tap to add it, or leave it and Dayne will sort it.`);
+  $('rv-warn').innerHTML=w.length?`<div class="note warn"><b>Check these</b><ul>${w.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:'';
+  $('rv-items').innerHTML=itemsHtml(ITEMS,true);
+  $('rv-removed').innerHTML=REMOVED.length?`<div class="box"><h3>Taken off the register</h3>${REMOVED.map(r=>`<p style="margin:0">${esc(r.tag||'no tag')} · ${esc(r.description)} <span class="small">${esc(r.location)}${r.reason?' · '+esc(r.reason):''}</span></p>`).join('')}</div>`:'';
+  $('grpList').innerHTML=[...new Set(ITEMS.map(i=>i.grp).filter(Boolean))].map(g=>`<option value="${esc(g)}">`).join('');
+}
+let EDIT=-1;
+function openItem(i){
+  EDIT=i;const it=i>=0?ITEMS[i]:{tag:'',description:'',location:'',grp:'',interval_months:+$('nr-int').value,result:'P',test_date:$('nr-date').value,notes:''};
+  $('it-h').textContent=i>=0?'Fix this line':'Add an item';
+  $('it-tag').value=it.tag;$('it-desc').value=it.description;$('it-loc').value=it.location;$('it-grp').value=it.grp;$('it-notes').value=it.notes||'';
+  $('it-int').value=String([3,6,12,24,60].includes(+it.interval_months)?it.interval_months:3);$('it-date').value=it.test_date||$('nr-date').value;
+  setRes(it.result);$('it-del').hidden=i<0;$('itemDlg').showModal();
+}
+function setRes(v){[...$('it-res').children].forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===v?'true':'false'))}
+$('it-res').addEventListener('click',e=>{const b=e.target.closest('[data-v]');if(b)setRes(b.dataset.v)});
+$('rv-items').addEventListener('click',e=>{const tr=e.target.closest('tr[data-i]');if(tr)openItem(+tr.dataset.i)});
+$('rv-items').addEventListener('keydown',e=>{if(e.key==='Enter'){const tr=e.target.closest('tr[data-i]');if(tr)openItem(+tr.dataset.i)}});
+$('addItem').onclick=()=>openItem(-1);
+$('itemDlg').addEventListener('close',()=>{
+  const v=$('itemDlg').returnValue;
+  if(v==='del'&&EDIT>=0){const r=ITEMS.splice(EDIT,1)[0];REMOVED.push({tag:r.tag,description:r.description,location:r.location,reason:'Removed on review'})}
+  else if(v==='ok'){
+    const res=[...$('it-res').children].find(b=>b.getAttribute('aria-pressed')==='true');const result=res?res.dataset.v:'P';
+    const im=+$('it-int').value,td=$('it-date').value||$('nr-date').value;
+    const it={tag:$('it-tag').value.trim(),description:$('it-desc').value.trim()||'Item',location:$('it-loc').value.trim(),grp:$('it-grp').value.trim(),interval_months:im,result,test_date:td,due_date:result==='P'?addMonths(td,im):'',notes:$('it-notes').value.trim()};
+    if(EDIT>=0){it.change=ITEMS[EDIT].change==='new'?'new':'changed';ITEMS[EDIT]=it}else{it.change='new';ITEMS.push(it)}
+  }else return;
+  drawReview();
+});
+
+/* ---------- save ---------- */
+async function save(status){
+  const btn=status==='final'?$('saveBtn'):$('flSave');btn.disabled=true;const old=btn.textContent;btn.textContent='Saving…';
+  try{
+    const items=status==='final'?ITEMS.map(i=>({tag:i.tag,description:i.description,location:i.location,grp:i.grp,interval_months:i.interval_months,result:i.result,test_date:i.test_date,due_date:i.due_date||null,notes:i.notes})):[];
+    const note=status==='final'&&REMOVED.length?'Taken off this visit: '+REMOVED.map(r=>`${r.tag||'no tag'} ${r.description}${r.reason?' ('+r.reason+')':''}`).join('; '):'';
+    const j=await rpc('tt_save',{p_site:SITE?SITE.id:null,p_new_site:NEWSITE||{},p_tested_on:$('nr-date').value||today(),p_technician:$('nr-tech').value.trim()||ME,p_narration:NARR||$('nr-text').value.trim(),p_items:items,p_status:status,p_note:note});
+    store.del($('nr-text').dataset.key);
+    if(!SITE&&j.site_id)SITE={id:j.site_id,client:NEWSITE.client,address:NEWSITE.address,builder:NEWSITE.builder,job_no:NEWSITE.job_no};
+    if(status==='final'){$('dn-msg').innerHTML=`<b>Register saved.</b> ${items.length} items for ${esc(SITE.client||SITE.address)}. It’s on Dayne’s hub now.`;$('dnPdf').href=reportUrl(j.id);$('dnPdf').hidden=false}
+    else{$('dn-msg').innerHTML='<b>Saved.</b> Dayne will turn it into the register.';$('dnPdf').hidden=true}
+    show('done');
+  }catch(e){alert(/bad_link/.test(e.message)?'Your link isn’t working. Ask Dayne for your crew link.':'Couldn’t save. Check your signal and tap Save again. Nothing has been lost.')}
+  finally{btn.disabled=false;btn.textContent=old}
+}
+$('saveBtn').onclick=()=>save('final');
+$('flSave').onclick=()=>save('pending');
+
+loadSites();
+})();
+</script>
+</body>
+</html>
