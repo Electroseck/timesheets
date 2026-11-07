@@ -74,8 +74,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 <div class="sticky"><div class="wrap">
   <div class="tabs" role="group" aria-label="Mode">
     <button type="button" id="tSearch" aria-pressed="true">Search</button>
-    <button type="button" id="tAsk" aria-pressed="false">Ask</button>
-    <button type="button" id="tCalc" aria-pressed="false">Calculators</button>
+    <button type="button" id="tAsk" aria-pressed="false">Ask a question</button>
   </div>
   <div id="searchBox">
     <input type="search" id="q" placeholder="e.g. shower zones, pool gpo, voltage drop" autocomplete="off" aria-label="Search the rules guide">
@@ -90,19 +89,16 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 
 <main class="wrap">
   <div id="askOut" hidden></div>
-  <div id="calcBox" hidden></div>
   <p class="count" id="count">Loading…</p>
   <div id="list" style="display:flex;flex-direction:column;gap:10px"></div>
-  <p class="foot" id="foot">This is a quick guide, not the standard. Always confirm against AS/NZS 3000 and the other standards listed before you rely on it, and isolate and test before you touch anything. Entries marked <span class="tag no">Not checked yet</span> haven't been checked against the book by Electroseck yet. Something wrong or missing? Tell Dayne.</p>
+  <p class="foot">This is a quick guide, not the standard. Always confirm against AS/NZS 3000 and the other standards listed before you rely on it, and isolate and test before you touch anything. Entries marked <span class="tag no">Not checked yet</span> haven't been checked against the book by Electroseck yet. Something wrong or missing? Tell Dayne.</p>
 </main>
 
-<script src="calc.js?v=1"></script>
 <script>
 (function(){
 const BASE='https://refvgqfirhjfxsatyuto.supabase.co';
 const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlZnZncWZpcmhqZnhzYXR5dXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNjAyMzEsImV4cCI6MjEwNjgzNjIzMX0.cYUkiH-V5Gj86m_l5D9yyPYhzJIwINxHa9Kiz_oyuhI';
 const H={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
-window.ES={BASE,KEY,H};
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 let token=new URLSearchParams(location.search).get('t')||'';
@@ -147,9 +143,8 @@ async function load(){
 }
 $('q').addEventListener('input',render);
 $('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;sec=b.dataset.s;document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c===b?'true':'false'));render()});
-function mode(m){const ask=m==='ask',calc=m==='calc',srch=m==='search';$('tSearch').setAttribute('aria-pressed',String(srch));$('tAsk').setAttribute('aria-pressed',String(ask));$('tCalc').setAttribute('aria-pressed',String(calc));$('searchBox').hidden=!srch;$('askBox').hidden=!ask;$('list').hidden=!srch;$('count').hidden=!srch;$('askOut').hidden=!ask||!$('askOut').innerHTML;$('calcBox').hidden=!calc;$('foot').hidden=calc;if(calc){if(window.ESCalc)window.ESCalc.show($('calcBox'));else $('calcBox').innerHTML='<p class="msg err">Calculators didn\'t load. Refresh the page.</p>'}else if(ask)$('aq').focus();else $('q').focus()}
-$('tSearch').onclick=()=>mode('search');$('tAsk').onclick=()=>mode('ask');$('tCalc').onclick=()=>mode('calc');
-const M0=new URLSearchParams(location.search).get('m');
+function mode(ask){$('tSearch').setAttribute('aria-pressed',ask?'false':'true');$('tAsk').setAttribute('aria-pressed',ask?'true':'false');$('searchBox').hidden=ask;$('askBox').hidden=!ask;$('list').hidden=ask;$('count').hidden=ask;$('askOut').hidden=!ask||!$('askOut').innerHTML;if(ask)$('aq').focus();else $('q').focus()}
+$('tSearch').onclick=()=>mode(false);$('tAsk').onclick=()=>mode(true);
 $('askBtn').onclick=async()=>{
   const q=$('aq').value.trim();const out=$('askOut');out.hidden=false;
   if(q.length<3){out.innerHTML='<p class="msg err">Type your question first.</p>';return}
@@ -167,7 +162,6 @@ $('askBtn').onclick=async()=>{
 };
 $('aq').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))$('askBtn').click()});
 load();
-if(M0==='calc'||M0==='ask')mode(M0);
 })();
 </script>
 </body>

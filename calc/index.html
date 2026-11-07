@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>Electroseck Calculators</title>
+<meta name="theme-color" content="#151313">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3F1F1; --panel:#FFFFFF; --fg:#161414; --muted:#6B6363; --line:#E2DDDD;
+  --accent:#DA1F26; --accent-ink:#8E1B1B; --accent-soft:#F7E3E3; --head:#151313; --ok:#1E7A4F; --ok-soft:#E3F2EA; --warn:#8A5A00; --warn-soft:#FBF0D9;
+  --display:'Anton',Impact,'Arial Narrow',sans-serif; --body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#121010; --panel:#1C1919; --fg:#F2EEEE; --muted:#A79E9E; --line:#2E2828; --accent:#EF4A4F; --accent-ink:#F07B72; --accent-soft:#2D1A1A; --head:#0A0909; --ok:#4CC08A; --ok-soft:#143024; --warn:#E8B860; --warn-soft:#2E2412; color-scheme:dark}}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;margin:0}
+.wrap{max-width:680px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--head);color:#fff;padding-block:20px 16px}
+header .wrap{display:flex;flex-direction:column;gap:6px}
+.brand{display:flex;align-items:center;gap:10px}
+.bolt{width:20px;height:26px;flex:none}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,7vw,38px);letter-spacing:.02em;text-transform:uppercase;margin:0;line-height:1}
+header p{margin:0;color:#CFC8C8;font-size:14.5px}
+main{padding-block:16px 48px;display:flex;flex-direction:column;gap:12px}
+.menu{display:flex;flex-direction:column;gap:10px}
+.mc{display:flex;gap:14px;align-items:center;text-align:left;font:inherit;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:14px;padding:16px;cursor:pointer;width:100%}
+.mc:hover{border-color:var(--accent)}
+.mc .ic{font-family:var(--display);font-size:24px;color:var(--accent);width:44px;flex:none;text-align:center}
+.mc b{display:block;font-size:20px;font-weight:800;line-height:1.15;color:var(--fg)}
+.mc span{display:block;color:var(--muted);font-size:14.5px}
+.mc.sm{border-left-width:1px;padding:12px 16px}.mc.sm b{font-size:17px}
+.sub{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:800;margin:8px 0 0}
+.back{align-self:flex-start;font:inherit;font-weight:700;font-size:15px;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
+h2{font-family:var(--display);font-weight:400;font-size:26px;letter-spacing:.03em;text-transform:uppercase;margin:0;line-height:1.05}
+.lead{margin:0;color:var(--muted);font-size:14.5px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.box h3{margin:0;font-size:16px;font-weight:800}
+.row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.f{display:flex;flex-direction:column;gap:4px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;min-width:0}
+.f.w{grid-column:1/-1}
+input,select{font:inherit;font-size:17px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);width:100%;min-width:0;text-transform:none;letter-spacing:0;font-weight:400}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.seg{display:flex;gap:6px}
+.seg button{flex:1;font:inherit;font-weight:700;font-size:15px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.res{border-radius:12px;padding:12px 14px;display:flex;flex-direction:column;gap:4px;font-size:15px}
+.res.ok{background:var(--ok-soft);border:1px solid var(--ok)}
+.res.bad{background:var(--accent-soft);border:1px solid var(--accent)}
+.res.info{background:var(--bg);border:1px solid var(--line)}
+.big{font-family:var(--mono);font-size:28px;font-weight:500;line-height:1.1}
+.verdict{font-weight:800;font-size:16px}
+.res.ok .verdict{color:var(--ok)}.res.bad .verdict{color:var(--accent-ink)}
+.small{font-size:13px;color:var(--muted);margin:0}
+.warn{color:var(--warn)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:6px;border-bottom:1px solid var(--line)}
+td{padding:7px 6px;border-bottom:1px solid var(--line)}
+td.n,th.n{text-align:right;font-family:var(--mono);white-space:nowrap}
+tr.pick td{background:var(--ok-soft);font-weight:700}
+.tw{overflow-x:auto}
+.load{border-top:1px solid var(--line);padding-top:10px;display:grid;grid-template-columns:minmax(0,1fr) 110px;gap:8px;align-items:end}
+.load .nm{grid-column:1/-1;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.load .nm b{font-size:15.5px}
+.load .amt{font-family:var(--mono);font-size:14px;white-space:nowrap}
+.load .x{font:inherit;font-size:13px;padding:2px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--muted);cursor:pointer}
+.load .ph{display:none}
+.three .load{grid-template-columns:minmax(0,1fr) 90px 90px}
+.three .load .ph{display:flex}
+.addl{display:flex;gap:8px}
+.addl select{flex:1}
+.addl button,.btn{font:inherit;font-weight:800;font-size:15px;padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:#fff;cursor:pointer;white-space:nowrap}
+details.adv summary{cursor:pointer;font-weight:700;font-size:14.5px;color:var(--muted)}
+details.adv[open] summary{margin-bottom:10px}
+.foot{font-size:13px;color:var(--muted);margin:10px 0 0;border-top:1px solid var(--line);padding-top:12px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="brand"><svg class="bolt" viewBox="0 0 24 30" aria-hidden="true"><path d="M15 0 3 17h8l-3 13 13-18h-8z" fill="#DA1F26"/></svg><h1>Calculators</h1></div>
+  <p>Electroseck site calculators – AS/NZS 3000 and AS/NZS 3008.</p>
+</div></header>
+
+<main class="wrap" id="app">
+  <section id="v-home" class="menu">
+    <button type="button" class="mc" data-go="md"><span class="ic">MD</span><span><b>Maximum demand</b><span>Work out the total load for a house – single or three phase (AS/NZS 3000 Appendix C)</span></span></button>
+    <button type="button" class="mc" data-go="vd"><span class="ic">VD</span><span><b>Voltage drop</b><span>Check a run, find the longest run allowed or the cable size you need</span></span></button>
+    <button type="button" class="mc" data-go="cc"><span class="ic">CC</span><span><b>Cable size &amp; current rating</b><span>Load, run length and how it's installed – get the right cable (AS/NZS 3008)</span></span></button>
+    <p class="sub">Other</p>
+    <button type="button" class="mc sm" data-go="ef"><span class="ic">Zs</span><span><b>Earth fault loop</b><span>Will the breaker trip in time on this run?</span></span></button>
+    <button type="button" class="mc sm" data-go="kw"><span class="ic">kW</span><span><b>kW ↔ amps</b><span>Convert power to current and back</span></span></button>
+    <p class="foot">Site estimates to help you plan the job. Confirm against AS/NZS 3000 and AS/NZS 3008 before you certify, and always test on site. Something wrong? Tell Dayne.</p>
+  </section>
+
+  <!-- MAXIMUM DEMAND -->
+  <section id="v-md" hidden style="display:flex;flex-direction:column;gap:12px">
+    <button type="button" class="back" data-go="home">← All calculators</button>
+    <h2>Maximum demand</h2>
+    <p class="lead">Single domestic (house, unit or granny flat on its own). Uses the Table C1 figures Electroseck has entered.</p>
+    <div class="box">
+      <div class="seg" id="md-sup" role="group" aria-label="Supply"><button type="button" data-v="1" aria-pressed="true">Single phase</button><button type="button" data-v="3" aria-pressed="false">Three phase</button></div>
+      <label class="f">Supply / main switch rating per phase (A)<input id="md-rate" inputmode="decimal" value="63"></label>
+    </div>
+    <div class="box" id="md-box">
+      <h3>Loads in the house</h3>
+      <p class="small">Lights and GPOs: enter the number of points. Appliances: enter the nameplate amps (or kW). Several the same? Type them like 16, 16 or add another line.</p>
+      <div id="md-rows"><p class="small">Loading…</p></div>
+      <div class="addl"><select id="md-addsel" aria-label="Load group to add"></select><button type="button" id="md-add">+ Add</button></div>
+    </div>
+    <div id="md-out"></div>
+  </section>
+
+  <!-- VOLTAGE DROP -->
+  <section id="v-vd" hidden style="display:flex;flex-direction:column;gap:12px">
+    <button type="button" class="back" data-go="home">← All calculators</button>
+    <h2>Voltage drop</h2>
+    <div class="box">
+      <div class="seg" id="vd-ph" role="group" aria-label="Supply"><button type="button" data-v="1" aria-pressed="true">Single phase 230 V</button><button type="button" data-v="3" aria-pressed="false">Three phase 400 V</button></div>
+      <div class="row">
+        <label class="f">Cable (copper)<select id="vd-s"></select></label>
+        <label class="f">Run length, one way (m)<input id="vd-l" inputmode="decimal" placeholder="e.g. 25"></label>
+        <label class="f">Load<input id="vd-i" inputmode="decimal" value="20"></label>
+        <label class="f">Load is in<select id="vd-u"><option value="A">Amps</option><option value="kW">kW</option></select></label>
+        <label class="f">Drop used upstream (%)<input id="vd-up" inputmode="decimal" value="0"></label>
+        <label class="f">Limit (%)<input id="vd-lim" inputmode="decimal" value="5"></label>
+      </div>
+      <p class="small">Upstream = consumer mains and any submain before this board. The 5% is for the whole path from the point of supply (AS/NZS 3000 Clause 3.6).</p>
+    </div>
+    <div id="vd-out"></div>
+  </section>
+
+  <!-- CABLE SIZE & CCC -->
+  <section id="v-cc" hidden style="display:flex;flex-direction:column;gap:12px">
+    <button type="button" class="back" data-go="home">← All calculators</button>
+    <h2>Cable size &amp; current rating</h2>
+    <div class="box">
+      <h3>The load</h3>
+      <div class="seg" id="cc-ph" role="group" aria-label="Supply"><button type="button" data-v="1" aria-pressed="true">Single phase 230 V</button><button type="button" data-v="3" aria-pressed="false">Three phase 400 V</button></div>
+      <div class="row">
+        <label class="f">Load<input id="cc-i" inputmode="decimal" value="20"></label>
+        <label class="f">Load is in<select id="cc-u"><option value="A">Amps (per phase)</option><option value="kW">kW</option></select></label>
+        <label class="f">Breaker (A)<select id="cc-cb"><option value="auto">Auto – next size up</option></select></label>
+        <label class="f">Run length (m)<input id="cc-l" inputmode="decimal" placeholder="e.g. 30"></label>
+      </div>
+    </div>
+    <div class="box">
+      <h3>The cable</h3>
+      <div class="row">
+        <label class="f w">Cable type<select id="cc-c"></select></label>
+        <label class="f w">How it's installed<select id="cc-m"></select></label>
+        <label class="f">Cable size<select id="cc-s"><option value="auto">Auto – smallest that works</option></select></label>
+        <label class="f">Max voltage drop (%)<input id="cc-vd" inputmode="decimal" value="5"></label>
+      </div>
+      <details class="adv"><summary>Derating and fault loop (optional)</summary>
+        <div class="row">
+          <label class="f">Circuits grouped together<input id="cc-g" inputmode="numeric" value="1"></label>
+          <label class="f" id="cc-tl">Air temperature (°C)<input id="cc-t" inputmode="decimal" value="40"></label>
+          <label class="f">Drop used upstream (%)<input id="cc-up" inputmode="decimal" value="0"></label>
+          <label class="f">Breaker curve<select id="cc-cv"><option value="5">B</option><option value="10" selected>C</option><option value="20">D</option></select></label>
+          <label class="f w">Loop at the board, Ze (Ω) – leave blank to skip<input id="cc-ze" inputmode="decimal" placeholder="e.g. 0.35"></label>
+        </div>
+      </details>
+    </div>
+    <div id="cc-out"></div>
+  </section>
+
+  <!-- FAULT LOOP -->
+  <section id="v-ef" hidden style="display:flex;flex-direction:column;gap:12px">
+    <button type="button" class="back" data-go="home">← All calculators</button>
+    <h2>Earth fault loop</h2>
+    <div class="box"><div class="row">
+      <label class="f">Breaker (A)<select id="ef-in"></select></label>
+      <label class="f">Curve<select id="ef-cv"><option value="5">B</option><option value="10" selected>C</option><option value="20">D</option></select></label>
+      <label class="f">Active (mm²)<select id="ef-a"></select></label>
+      <label class="f">Earth (mm²)<select id="ef-e"></select></label>
+      <label class="f">Run length (m)<input id="ef-l" inputmode="decimal" placeholder="e.g. 30"></label>
+      <label class="f">Loop at the board, Ze (Ω)<input id="ef-z" inputmode="decimal" placeholder="e.g. 0.35"></label>
+    </div>
+    <p class="small">Max loop = 230 V ÷ the current that trips the breaker instantly (B 5×, C 10×, D 20× its rating). Check against AS/NZS 3000 Table 8.1 and always measure on site.</p></div>
+    <div id="ef-out"></div>
+  </section>
+
+  <!-- KW AMPS -->
+  <section id="v-kw" hidden style="display:flex;flex-direction:column;gap:12px">
+    <button type="button" class="back" data-go="home">← All calculators</button>
+    <h2>kW ↔ amps</h2>
+    <div class="box">
+      <div class="seg" id="kw-ph" role="group" aria-label="Supply"><button type="button" data-v="1" aria-pressed="true">Single phase 230 V</button><button type="button" data-v="3" aria-pressed="false">Three phase 400 V</button></div>
+      <div class="row">
+        <label class="f w">Power factor<select id="kw-pf"><option value="1">1.0 – heaters, elements, ovens</option><option value="0.95">0.95 – inverter A/C, LED drivers</option><option value="0.85">0.85 – motors and pumps</option></select></label>
+        <label class="f">kW<input id="kw-k" inputmode="decimal" placeholder="e.g. 7.2"></label>
+        <label class="f">or amps<input id="kw-a" inputmode="decimal" placeholder="e.g. 32"></label>
+      </div>
+    </div>
+    <div id="kw-out"></div>
+  </section>
+</main>
+
+<script>
+(function(){
+const BASE='https://refvgqfirhjfxsatyuto.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlZnZncWZpcmhqZnhzYXR5dXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNjAyMzEsImV4cCI6MjEwNjgzNjIzMX0.cYUkiH-V5Gj86m_l5D9yyPYhzJIwINxHa9Kiz_oyuhI';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const n=v=>{const x=parseFloat(String(v==null?'':v).replace(',','.'));return isFinite(x)?x:null};
+const r=(x,d=2)=>(Math.round(x*Math.pow(10,d))/Math.pow(10,d)).toLocaleString('en-AU',{maximumFractionDigits:d});
+
+/* Cable physics: copper resistance at 20°C (Ω/km, IEC 60228 max), corrected to 75°C. Reactance ~0.09 mΩ/m multicore. */
+const R20={1:18.1,1.5:12.1,2.5:7.41,4:4.61,6:3.08,10:1.83,16:1.15,25:0.727,35:0.524,50:0.387,70:0.268,95:0.193,120:0.153};
+const SIZES=[1.5,2.5,4,6,10,16,25,35,50,70,95,120];
+const rOp=s=>R20[s]*(1+0.00393*55);
+const zOp=s=>Math.sqrt(rOp(s)**2+0.09*0.09);
+const EARTH={1.5:1.5,2.5:2.5,4:2.5,6:2.5,10:4,16:6,25:6,35:10,50:16,70:25,95:25,120:35};
+const CBS=[6,10,16,20,25,32,40,50,63,80,100,125];
+const ampsOf=(val,unit,three,pf=1)=>unit==='kW'?val*1000/((three?Math.sqrt(3)*400:230)*pf):val;
+
+let D={cables:[],methods:[],ccc:[],derate:[],md:[]},loaded=false;
+async function load(){
+  try{const res=await fetch(BASE+'/rest/v1/rpc/calc_data',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},body:'{}'});if(!res.ok)throw 0;D=await res.json();loaded=true}
+  catch(e){loaded=false}
+  fillCC();mdInit();ccCalc();
+}
+
+/* ---------- routing ---------- */
+const VIEWS=['home','md','vd','cc','ef','kw'];
+function go(v){if(!VIEWS.includes(v))v='home';VIEWS.forEach(k=>$('v-'+k).hidden=k!==v);if(location.hash.slice(1)!==v)history.replaceState(null,'','#'+(v==='home'?'':v));window.scrollTo(0,0)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b){go(b.dataset.go)}});
+window.addEventListener('hashchange',()=>go(location.hash.slice(1)||'home'));
+function seg(id,fn){const el=$(id);el.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;el.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));fn()});}
+const segv=id=>$(id).querySelector('[aria-pressed="true"]').dataset.v;
+const sizeOpts=(sel,def)=>SIZES.map(s=>`<option value="${s}"${s===def?' selected':''}>${s} mm²${s===2.5?' (TPS)':''}</option>`).join('');
+
+/* ---------- voltage drop ---------- */
+$('vd-s').innerHTML=sizeOpts('vd-s',2.5);
+function vd(){
+  const three=segv('vd-ph')==='3', s=n($('vd-s').value), L=n($('vd-l').value), up=n($('vd-up').value)||0, lim=n($('vd-lim').value)||5;
+  const I=n($('vd-i').value)!=null?ampsOf(n($('vd-i').value),$('vd-u').value,three):null;
+  const out=$('vd-out');
+  if(!I||!L){out.innerHTML='<div class="res info"><span>Enter the load and the run length.</span><span class="small">2.5 mm² single phase ≈ '+r(2*zOp(2.5),1)+' mV/A.m at 75°C</span></div>';return}
+  const V=three?400:230,k=three?Math.sqrt(3):2,mv=k*zOp(s),vdV=mv*I*L/1000,pct=vdV/V*100,tot=pct+up,ok=tot<=lim+1e-9;
+  const maxL=Math.max(0,lim-up)/100*V*1000/(mv*I);
+  const pass=SIZES.find(x=>k*zOp(x)*I*L/1000/V*100+up<=lim);
+  out.innerHTML=`<div class="res ${ok?'ok':'bad'}"><span class="verdict">${ok?'PASSES':'TOO MUCH DROP'}</span><span class="big">${r(vdV)} V · ${r(pct)}%</span>
+  <span>Total with upstream: <b>${r(tot)}%</b> of ${r(lim,1)}%</span>
+  <span>Longest run on ${s} mm² at ${r(I,1)} A: <b>${r(maxL,0)} m</b></span>
+  <span>${pass?(pass===s?'This is the smallest cable that passes.':'Smallest cable that passes: <b>'+pass+' mm²</b>'):'<span class="warn">Even 120 mm² fails – rethink the supply.</span>'}</span>
+  <span class="small">${r(mv,1)} mV/A.m (${three?'three':'single'} phase, copper at 75°C). Voltage drop only – check the current rating in Cable size &amp; current rating.</span></div>`;
+}
+seg('vd-ph',vd);['vd-s','vd-l','vd-i','vd-u','vd-up','vd-lim'].forEach(id=>$(id).addEventListener('input',vd));
+
+/* ---------- cable size & current rating ---------- */
+$('cc-cb').innerHTML+=CBS.map(a=>`<option value="${a}">${a} A</option>`).join('');
+$('cc-s').innerHTML+=SIZES.map(s=>`<option value="${s}">${s} mm²</option>`).join('');
+function fillCC(){
+  const c=$('cc-c'),m=$('cc-m');
+  c.innerHTML=(D.cables.length?D.cables:[{name:'TPS 2C+E (V-90)'}]).map(x=>`<option>${esc(x.name)}</option>`).join('');
+  m.innerHTML=(D.methods.length?D.methods:[{name:'Unenclosed – clipped to a surface or in air'}]).map(x=>`<option title="${esc(x.note||'')}">${esc(x.name)}</option>`).join('');
+}
+const under=()=>/^underground/i.test($('cc-m').value);
+function factor(kind,x){
+  const rows=D.derate.filter(d=>d.k===kind).sort((a,b)=>a.x-b.x);if(!rows.length||x==null)return {f:1,none:true};
+  if(kind==='group'){let f=rows[0].f;rows.forEach(d=>{if(d.x<=x)f=d.f});return {f}}
+  if(x<=rows[0].x)return {f:rows[0].f};if(x>=rows[rows.length-1].x)return {f:rows[rows.length-1].f};
+  for(let i=0;i<rows.length-1;i++){const a=rows[i],b=rows[i+1];if(x>=a.x&&x<=b.x)return {f:a.f+(b.f-a.f)*(x-a.x)/(b.x-a.x)}}
+  return {f:1};
+}
+function ccCalc(){
+  const three=segv('cc-ph')==='3',p=three?3:1;
+  $('cc-tl').firstChild.textContent=under()?'Soil temperature (°C)':'Air temperature (°C)';
+  const raw=n($('cc-i').value),I=raw!=null?ampsOf(raw,$('cc-u').value,three):null,L=n($('cc-l').value);
+  const lim=n($('cc-vd').value)||5,up=n($('cc-up').value)||0,ze=n($('cc-ze').value),curve=n($('cc-cv').value);
+  const out=$('cc-out');
+  if(!I){out.innerHTML='<div class="res info"><span>Enter the load.</span></div>';return}
+  const cb=$('cc-cb').value==='auto'?CBS.find(a=>a>=I):n($('cc-cb').value);
+  const need=Math.max(I,cb||I);
+  const cab=$('cc-c').value,met=$('cc-m').value;
+  const fg=factor('group',n($('cc-g').value)||1),ft=factor(under()?'soil':'air',n($('cc-t').value));
+  const der=fg.f*ft.f;
+  const V=three?400:230,k=three?Math.sqrt(3):2;
+  const rows=SIZES.map(s=>{
+    const t=D.ccc.find(x=>x.c===cab&&x.m===met&&+x.s===s&&+x.p===p);
+    const rated=t?+t.a:null,derated=rated!=null?rated*der:null;
+    const vdp=L?k*zOp(s)*I*L/1000/V*100:null;
+    let zs=null,zmax=cb?230/(curve*cb):null;
+    if(ze!=null&&L)zs=ze+L*(rOp(s)+rOp(EARTH[s]))/1000;
+    const okI=derated==null?null:derated>=need-1e-9;
+    const okV=vdp==null?true:vdp+up<=lim+1e-9;
+    const okZ=zs==null||zmax==null?true:zs<=zmax;
+    return {s,rated,derated,vdp,zs,zmax,okI,okV,okZ};
+  });
+  const haveI=rows.some(x=>x.rated!=null);
+  const fixed=$('cc-s').value==='auto'?null:n($('cc-s').value);
+  const good=x=>(haveI?x.okI===true:true)&&x.okV&&x.okZ;
+  const pick=fixed?rows.find(x=>x.s===fixed):rows.find(good);
+  const ok=pick&&good(pick);
+  let h=`<div class="res ${ok?'ok':'bad'}">`;
+  if(fixed)h+=`<span class="verdict">${ok?fixed+' mm² WORKS':fixed+' mm² DOESN\'T WORK'}</span>`;
+  else h+=pick?`<span class="verdict">USE</span><span class="big">${pick.s} mm²</span>`:`<span class="verdict">${haveI?'NO SIZE WITH A RATING ENTERED WORKS':'NOTHING UP TO 120 mm² WORKS'}</span>${haveI?'<span class="warn">Bigger sizes have no current rating entered for this cable and installation yet – check AS/NZS 3008.</span>':''}`;
+  h+=`<span>Load ${r(I,1)} A${cb?` · breaker ${cb} A`:''} · cable must carry at least <b>${r(need,1)} A</b></span>`;
+  if(pick){
+    if(pick.rated!=null)h+=`<span>Current rating: ${r(pick.rated,1)} A${der!==1?` × ${r(der,2)} derating = <b>${r(pick.derated,1)} A</b>`:''} ${pick.okI?'✓':'✗'}</span>`;
+    if(pick.vdp!=null)h+=`<span>Voltage drop: <b>${r(pick.vdp)}%</b>${up?` + ${r(up)}% upstream`:''} of ${r(lim,1)}% ${pick.okV?'✓':'✗'}</span>`;
+    if(pick.zs!=null&&pick.zmax!=null)h+=`<span>Fault loop: <b>${r(pick.zs)} Ω</b> of ${r(pick.zmax)} Ω max ${pick.okZ?'✓':'✗'} (earth ${EARTH[pick.s]} mm²)</span>`;
+  }
+  if(!haveI)h+=`<span class="warn">No current ratings entered yet for "${esc(cab)}" ${esc(met.toLowerCase())}. This answer only checks voltage drop${ze!=null?' and fault loop':''} – check the current rating in AS/NZS 3008.</span>`;
+  if(der!==1||fg.none||ft.none)h+=`<span class="small">${fg.none&&ft.none?'No derating figures entered yet, so no derating applied.':'Derating: grouping '+r(fg.f,2)+(fg.none?' (no figures)':'')+' × temperature '+r(ft.f,2)+(ft.none?' (no figures)':'')}</span>`;
+  h+=`</div>`;
+  h+=`<div class="box"><h3>Every size</h3><div class="tw"><table><thead><tr><th>Size</th><th class="n">Rating</th><th class="n">Derated</th><th class="n">V drop</th>${ze!=null?'<th class="n">Loop</th>':''}<th></th></tr></thead><tbody>`+
+    rows.filter(x=>x.s<=Math.max(16,pick?pick.s*2:16)).map(x=>`<tr${pick&&x.s===pick.s?' class="pick"':''}><td>${x.s} mm²</td><td class="n">${x.rated!=null?r(x.rated,0)+' A':'–'}</td><td class="n">${x.derated!=null?r(x.derated,1)+' A':'–'}</td><td class="n">${x.vdp!=null?r(x.vdp)+'%':'–'}</td>${ze!=null?`<td class="n">${x.zs!=null?r(x.zs)+' Ω':'–'}</td>`:''}<td>${haveI&&x.rated==null?'<span class="small">no rating</span>':good(x)?'✓':'✗'}</td></tr>`).join('')+
+    `</tbody></table></div><p class="small">Ratings from AS/NZS 3008.1.1 as entered by Electroseck for this cable type and installation. Voltage drop and loop worked out from copper resistance at 75°C. Site estimate – confirm before you certify.</p></div>`;
+  out.innerHTML=h;
+}
+seg('cc-ph',ccCalc);['cc-i','cc-u','cc-cb','cc-l','cc-c','cc-m','cc-s','cc-vd','cc-g','cc-t','cc-up','cc-cv','cc-ze'].forEach(id=>$(id).addEventListener('input',ccCalc));
+
+/* ---------- max demand ---------- */
+let MDrows=[],rid=0;
+function mdInit(){
+  const box=$('md-rows');
+  if(!loaded){box.innerHTML='<p class="small warn">Couldn\'t load the load groups. Check your signal and refresh.</p>';return}
+  $('md-addsel').innerHTML=D.md.map(g=>`<option value="${g.id}">${esc(g.name)}</option>`).join('');
+  if(!MDrows.length)D.md.forEach(g=>MDrows.push({id:++rid,g:g.id,val:'',unit:'A',ph:'R'}));
+  mdDraw();
+}
+function mdDraw(){
+  const three=segv('md-sup')==='3';
+  $('md-box').classList.toggle('three',three);
+  $('md-rows').innerHTML=MDrows.map(rw=>{const g=D.md.find(x=>x.id===rw.g);if(!g)return '';
+    const pts=g.kind==='points';
+    return `<div class="load" data-r="${rw.id}"><div class="nm"><b>${esc(g.name)}</b><span><span class="amt" id="mda-${rw.id}"></span> <button type="button" class="x" data-del="${rw.id}" aria-label="Remove">✕</button></span></div>
+    <label class="f">${pts?'Number of points':'Amps each, e.g. 16, 10'}${g.table_ref?' · '+esc(g.table_ref):''}<input data-k="val" value="${esc(rw.val)}" inputmode="decimal" placeholder="${pts?'e.g. 30':'e.g. 16'}"></label>
+    ${pts?'<span></span>':`<label class="f">Unit<select data-k="unit"><option${rw.unit==='A'?' selected':''}>A</option><option${rw.unit==='kW'?' selected':''}>kW</option></select></label>`}
+    <label class="f ph">Phase<select data-k="ph">${['R','W','B'].concat(pts?[]:['3Ø']).map(p=>`<option${rw.ph===p?' selected':''}>${p}</option>`).join('')}</select></label></div>`}).join('');
+  mdCalc();
+}
+function mdCalc(){
+  const three=segv('md-sup')==='3',phs=three?['R','W','B']:['R'];
+  const acc={};let missing=new Set(),any=false;
+  MDrows.forEach(rw=>{const g=D.md.find(x=>x.id===rw.g);if(!g)return;
+    const vals=String(rw.val||'').split(/[,+\s]+/).map(n).filter(x=>x!=null&&x>0);if(!vals.length)return;any=true;
+    const key=g.id;acc[key]=acc[key]||{g,ph:{R:0,W:0,B:0}};
+    const targets=three?(rw.ph==='3Ø'?['R','W','B']:[rw.ph]):['R'];
+    let q=g.kind==='points'?vals.reduce((a,b)=>a+b,0):vals.reduce((a,b)=>a+ampsOf(b,rw.unit,three&&rw.ph==='3Ø'),0);
+    targets.forEach(p=>acc[key].ph[p]+=q);
+  });
+  const tot={R:0,W:0,B:0},rowAmt={};
+  Object.values(acc).forEach(({g,ph})=>{
+    const ready=g.kind==='points'?g.base_amps!=null:(g.pct!=null||g.base_amps!=null);
+    phs.forEach(p=>{const q=ph[p];if(!q)return;if(!ready){missing.add(g.name);return}
+      let a;
+      if(g.kind==='points'){a=+g.base_amps||0;const bu=+g.base_units||0;if(q>bu&&g.step_units&&g.step_amps)a+=Math.ceil((q-bu)/+g.step_units)*+g.step_amps}
+      else a=g.pct!=null?q*(+g.pct)/100+(+g.base_amps||0):(+g.base_amps||0);
+      tot[p]+=a;rowAmt[g.id]=(rowAmt[g.id]||0)+a;});
+  });
+  MDrows.forEach(rw=>{const el=$('mda-'+rw.id);if(!el)return;const g=D.md.find(x=>x.id===rw.g);
+    el.innerHTML=rw.val?(missing.has(g.name)?'<span class="warn">no figures</span>':''):''});
+  // show group demand on first row of each group
+  const seen={};MDrows.forEach(rw=>{const el=$('mda-'+rw.id);if(!el||!rw.val||seen[rw.g])return;seen[rw.g]=1;if(rowAmt[rw.g]!=null)el.textContent=r(rowAmt[rw.g],1)+' A'+(MDrows.filter(x=>x.g===rw.g&&x.val).length>1?' (group)':'')});
+  const rate=n($('md-rate').value);const out=$('md-out');
+  if(!any){out.innerHTML='<div class="res info"><span>Fill in the loads above.</span></div>';return}
+  const worst=Math.max(...phs.map(p=>tot[p]));const ok=rate?worst<=rate:true;
+  let h=`<div class="res ${missing.size?'info':ok?'ok':'bad'}"><span class="verdict">${missing.size?'NOT COMPLETE':ok?'WITHIN THE SUPPLY':'OVER THE SUPPLY'}</span>`;
+  if(three)h+=`<span class="big">${r(worst,1)} A</span><span>Highest phase. R ${r(tot.R,1)} A · W ${r(tot.W,1)} A · B ${r(tot.B,1)} A</span>${Math.max(tot.R,tot.W,tot.B)-Math.min(tot.R,tot.W,tot.B)>10?'<span class="warn">Phases are out of balance by more than 10 A – move a big load to the lightest phase.</span>':''}`;
+  else h+=`<span class="big">${r(tot.R,1)} A</span>`;
+  if(rate)h+=`<span>Against ${r(rate,0)} A per phase</span>`;
+  if(missing.size)h+=`<span class="warn">No Table C1 figures entered yet for: ${esc([...missing].join(', '))}. Those loads aren't counted.</span>`;
+  h+=`<span class="small">AS/NZS 3000 Appendix C, single domestic. Keep the calc with the job.</span></div>`;
+  out.innerHTML=h;
+}
+$('md-rows').addEventListener('input',e=>{const el=e.target.closest('[data-k]');if(!el)return;const rw=MDrows.find(x=>x.id===+el.closest('[data-r]').dataset.r);rw[el.dataset.k]=el.value;mdCalc()});
+$('md-rows').addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;MDrows=MDrows.filter(x=>x.id!==+b.dataset.del);mdDraw()});
+$('md-add').addEventListener('click',()=>{const g=+$('md-addsel').value;if(!g)return;const last=MDrows.map(x=>x.g).lastIndexOf(g);const row={id:++rid,g,val:'',unit:'A',ph:'R'};if(last>=0)MDrows.splice(last+1,0,row);else MDrows.push(row);mdDraw()});
+seg('md-sup',mdDraw);$('md-rate').addEventListener('input',mdCalc);
+
+/* ---------- fault loop ---------- */
+$('ef-in').innerHTML=CBS.map(a=>`<option${a===20?' selected':''}>${a}</option>`).join('');
+$('ef-a').innerHTML=SIZES.map(s=>`<option value="${s}"${s===2.5?' selected':''}>${s}</option>`).join('');
+$('ef-e').innerHTML=SIZES.map(s=>`<option value="${s}"${s===2.5?' selected':''}>${s}</option>`).join('');
+function ef(){
+  const In=n($('ef-in').value),k=n($('ef-cv').value),a=n($('ef-a').value),e=n($('ef-e').value),L=n($('ef-l').value),Ze=n($('ef-z').value);
+  const zmax=230/(k*In),rl=(rOp(a)+rOp(e))/1000,out=$('ef-out');
+  if(L==null||Ze==null){out.innerHTML=`<div class="res info"><span>Max loop for a ${In} A ${({5:'B',10:'C',20:'D'})[k]}-curve breaker: <b>${r(zmax)} Ω</b></span><span class="small">Enter the run length and the loop you measured at the board.</span></div>`;return}
+  const zs=Ze+rl*L,ok=zs<=zmax,maxL=Math.max(0,(zmax-Ze)/rl);
+  out.innerHTML=`<div class="res ${ok?'ok':'bad'}"><span class="verdict">${ok?'SHOULD TRIP IN TIME':'LOOP TOO HIGH'}</span><span class="big">${r(zs)} Ω</span><span>Max about <b>${r(zmax)} Ω</b> · longest run about <b>${r(maxL,0)} m</b></span><span class="small">Cable adds ${r(rl*1000,1)} mΩ per metre (active ${a} + earth ${e} mm² at 75°C). Estimate – measure it.</span></div>`;
+}
+['ef-in','ef-cv','ef-e','ef-l','ef-z'].forEach(id=>$(id).addEventListener('input',ef));
+$('ef-a').addEventListener('input',()=>{$('ef-e').value=String(EARTH[n($('ef-a').value)]);ef()});
+
+/* ---------- kW <-> amps ---------- */
+function kw(){
+  const three=segv('kw-ph')==='3',pf=n($('kw-pf').value)||1,K=n($('kw-k').value),A=n($('kw-a').value),V=three?400:230,f=three?Math.sqrt(3):1,out=$('kw-out');
+  if(K){out.innerHTML=`<div class="res info"><span class="big">${r(K*1000/(f*V*pf),1)} A</span><span>${r(K)} kW${three?', per phase':''}, pf ${pf}</span></div>`;return}
+  if(A){out.innerHTML=`<div class="res info"><span class="big">${r(A*f*V*pf/1000)} kW</span><span>${r(A,1)} A${three?' per phase':''}, pf ${pf}</span></div>`;return}
+  out.innerHTML='<div class="res info"><span>Type kW or amps.</span></div>';
+}
+seg('kw-ph',kw);$('kw-pf').addEventListener('input',kw);
+$('kw-k').addEventListener('input',()=>{$('kw-a').value='';kw()});$('kw-a').addEventListener('input',()=>{$('kw-k').value='';kw()});
+
+vd();ef();kw();go(location.hash.slice(1)||'home');load();
+})();
+</script>
+</body>
+</html>
