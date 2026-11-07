@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Electroseck Calculation Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--ink:#161414;--muted:#6B6363;--line:#E2DDDD;--red:#DA1F26;--head:#151313;--ok:#1E7A4F;--okbg:#E3F2EA;--bad:#8E1B1B;--badbg:#F7E3E3;--display:'Anton',Impact,'Arial Narrow',sans-serif;--body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:#E9E6E6;color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45}
+.bar{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;z-index:2}
+.bar button,.bar a{font:inherit;font-weight:800;font-size:15px;padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;text-decoration:none}
+.bar .p{background:var(--red);border-color:var(--red);color:#fff}
+.page{width:210mm;min-height:297mm;margin:16px auto;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.12);display:flex;flex-direction:column}
+@media (max-width:820px){.page{width:auto;min-height:0;margin:12px}}
+.hd{background:var(--head);color:#fff;padding:18px 26px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.hd img{height:46px;width:auto;display:block}
+.hd .co{text-align:right;font-size:11.5px;color:#D8D2D2;line-height:1.5}
+.hd .co b{color:#fff;font-size:13px}
+.redline{height:5px;background:var(--red)}
+.body{padding:22px 26px;display:flex;flex-direction:column;gap:16px;flex:1}
+h1{font-family:var(--display);font-weight:400;font-size:28px;letter-spacing:.03em;text-transform:uppercase;margin:0;line-height:1.05}
+.sub{color:var(--muted);font-size:13px;margin:2px 0 0}
+.meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 22px;border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.meta div{display:flex;flex-direction:column}
+.meta span{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.meta b{font-weight:600;font-size:14px}
+h2{font-size:11.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--red);font-weight:800;margin:0 0 6px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700;padding:6px 8px;border-bottom:1.5px solid var(--ink)}
+td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+table.kv td:first-child{color:var(--muted);width:42%}
+table.kv td:last-child{font-weight:600}
+.verdict{border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.verdict.ok{background:var(--okbg);border:1.5px solid var(--ok)}.verdict.bad{background:var(--badbg);border:1.5px solid var(--red)}
+.verdict .v{font-weight:800;font-size:18px}.verdict.ok .v{color:var(--ok)}.verdict.bad .v{color:var(--bad)}
+.verdict .h{font-family:var(--mono);font-size:24px}
+ul.notes{margin:0;padding-left:18px;color:var(--muted);font-size:12px}
+.sig{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px;margin-top:6px}
+.sig div{border-top:1px solid var(--ink);padding-top:4px;font-size:11.5px;color:var(--muted)}
+.ft{border-top:1px solid var(--line);padding:10px 26px;font-size:10.5px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.msg{text-align:center;padding:60px 16px;color:var(--muted)}
+@page{size:A4;margin:0}
+@media print{body{background:#fff}.bar{display:none}.page{margin:0;box-shadow:none;width:210mm;min-height:297mm}.hd,.redline,.verdict{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<div class="bar"><button type="button" class="p" id="pdf">Save as PDF / Print</button><button type="button" id="share">Share link</button><a href="./">Calculators</a></div>
+<div id="doc"><p class="msg">Loading report…</p></div>
+<script>
+(function(){
+const BASE='https://refvgqfirhjfxsatyuto.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlZnZncWZpcmhqZnhzYXR5dXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNjAyMzEsImV4cCI6MjEwNjgzNjIzMX0.cYUkiH-V5Gj86m_l5D9yyPYhzJIwINxHa9Kiz_oyuhI';
+const LOGO='data:image/png;base64,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';
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const id=new URLSearchParams(location.search).get('id')||'';
+const kv=rows=>'<table class="kv"><tbody>'+(rows||[]).map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>').join('')+'</tbody></table>';
+const tbl=t=>t&&t.rows&&t.rows.length?'<table><thead><tr>'+t.head.map(h=>'<th>'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+t.rows.map(r=>'<tr>'+r.map(c=>'<td>'+esc(c)+'</td>').join('')+'</tr>').join('')+'</tbody></table>':'';
+async function load(){
+  if(!/^[0-9a-f-]{36}$/i.test(id)){document.getElementById('doc').innerHTML='<p class="msg">No report found. Open it from the Calculators app or the hub.</p>';return}
+  try{
+    const res=await fetch(BASE+'/rest/v1/rpc/calc_get',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({p_id:id})});
+    const d=await res.json();if(!res.ok||!d)throw 0;render(d);
+  }catch(e){document.getElementById('doc').innerHTML='<p class="msg">Couldn\'t load this report. Check your signal and refresh.</p>'}
+}
+function render(d){
+  const R=d.results||{},dt=new Date(d.created_at);
+  const ref='EC-'+dt.getFullYear().toString().slice(2)+String(dt.getMonth()+1).padStart(2,'0')+String(dt.getDate()).padStart(2,'0')+'-'+d.id.slice(0,4).toUpperCase();
+  document.title=(d.job_no?d.job_no+' ':'')+(R.name||'Calculation')+' – '+(d.site||d.client||'Electroseck');
+  document.getElementById('doc').innerHTML='<div class="page"><div class="hd"><img src="'+LOGO+'" alt="Electroseck"><div class="co"><b>Electroseck Pty Ltd</b><br>3/1 Ern Harley Drive, Burleigh Heads QLD 4220<br>ABN 17 611 005 004 · QLD Electrical Contractor Licence 80778</div></div><div class="redline"></div>'+
+  '<div class="body"><div><h1>'+esc(R.name||'Calculation')+' report</h1><p class="sub">'+esc(d.title||'')+'</p></div>'+
+  '<div class="meta"><div><span>Client</span><b>'+esc(d.client||'–')+'</b></div><div><span>Site address</span><b>'+esc(d.site||'–')+'</b></div><div><span>Job number</span><b>'+esc(d.job_no||'–')+'</b></div><div><span>Report</span><b>'+ref+'</b></div><div><span>Date</span><b>'+dt.toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'})+'</b></div><div><span>Prepared by</span><b>'+esc(d.worker_name||'Electroseck')+'</b></div></div>'+
+  '<div class="verdict '+(R.ok?'ok':'bad')+'"><span class="v">'+esc(R.verdict||'')+'</span><span class="h">'+esc(R.headline||'')+'</span></div>'+
+  '<div><h2>Inputs</h2>'+kv(d.inputs)+'</div>'+
+  '<div><h2>Results</h2>'+kv(R.lines)+'</div>'+
+  (R.table&&R.table.rows&&R.table.rows.length?'<div><h2>'+(d.kind==='md'?'Loads':'Cable sizes checked')+'</h2>'+tbl(R.table)+'</div>':'')+
+  (R.table2&&R.table2.rows&&R.table2.rows.length?'<div><h2>Demand by load group</h2>'+tbl(R.table2)+'</div>':'')+
+  '<div><h2>Basis and notes</h2><ul class="notes">'+(R.notes||[]).map(x=>'<li>'+esc(x)+'</li>').join('')+'<li>Calculated in line with AS/NZS 3000:2018 and AS/NZS 3008.1.1. This is a design calculation; the installation must be verified by inspection and testing.</li></ul></div>'+
+  '<div class="sig"><div>Checked by</div><div>Date</div></div>'+
+  '</div><div class="ft"><span>Electroseck Pty Ltd · Licence 80778</span><span>'+ref+'</span></div></div>';
+}
+document.getElementById('pdf').onclick=()=>window.print();
+document.getElementById('share').onclick=async()=>{const u=location.href;try{if(navigator.share){await navigator.share({title:document.title,url:u});return}await navigator.clipboard.writeText(u);document.getElementById('share').textContent='Link copied'}catch(e){}};
+load();
+})();
+</script>
+</body>
+</html>
