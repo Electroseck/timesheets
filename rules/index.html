@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache">
+<title>Electroseck Rules Guide</title>
+<meta name="theme-color" content="#151313">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#F3F1F1; --panel:#FFFFFF; --fg:#161414; --muted:#6B6363; --line:#E2DDDD;
+  --accent:#DA1F26; --accent-ink:#8E1B1B; --accent-soft:#F7E3E3; --head:#151313; --ok:#1E7A4F; --ok-soft:#E3F2EA; --warn:#8A5A00; --warn-soft:#FBF0D9;
+  --display:'Anton',Impact,'Arial Narrow',sans-serif; --body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#121010; --panel:#1C1919; --fg:#F2EEEE; --muted:#A79E9E; --line:#2E2828; --accent:#EF4A4F; --accent-ink:#F07B72; --accent-soft:#2D1A1A; --head:#0A0909; --ok:#4CC08A; --ok-soft:#143024; --warn:#E8B860; --warn-soft:#2E2412; color-scheme:dark}}
+*{box-sizing:border-box}
+html{padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.45;margin:0}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{background:var(--head);color:#fff;padding-block:20px 16px}
+header .wrap{display:flex;flex-direction:column;gap:6px}
+.brand{display:flex;align-items:center;gap:10px}
+.bolt{width:20px;height:26px;flex:none}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,7vw,38px);letter-spacing:.02em;text-transform:uppercase;margin:0;line-height:1}
+header p{margin:0;color:#CFC8C8;font-size:14.5px}
+.sticky{position:sticky;top:0;z-index:5;background:var(--bg);padding-block:12px 8px;border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:6px;margin-bottom:10px}
+.tabs button{flex:1;font:inherit;font-weight:800;font-size:15px;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+input[type=search],textarea{font:inherit;font-size:17px;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--panel);color:var(--fg);width:100%}
+input[type=search]:focus,textarea:focus{outline:none;border-color:var(--accent)}
+textarea{min-height:92px;resize:vertical}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;font:inherit;font-size:13.5px;font-weight:600;padding:6px 11px;border-radius:99px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+main{padding-block:12px 40px;display:flex;flex-direction:column;gap:10px}
+.count{font-size:13.5px;color:var(--muted);margin:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.card summary{list-style:none;cursor:pointer;padding:13px 14px;display:flex;flex-direction:column;gap:3px}
+.card summary::-webkit-details-marker{display:none}
+.card .sec{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:800}
+.card h2{font-size:17.5px;font-weight:800;margin:0;line-height:1.25}
+.card .sum{font-size:15px;color:var(--muted);margin:0}
+.card[open] .sum{color:var(--fg)}
+.card ul{margin:0;padding:0 14px 6px 32px;display:flex;flex-direction:column;gap:6px;font-size:15.5px}
+.ref{margin:6px 14px 14px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+.ref b{color:var(--fg);font-weight:500}
+.tag{font-family:var(--body);font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px}
+.tag.no{background:var(--warn-soft);color:var(--warn)}
+.tag.ok{background:var(--ok-soft);color:var(--ok)}
+mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px}
+.btn{font:inherit;font-weight:800;font-size:16px;padding:12px 16px;border-radius:12px;border:0;background:var(--accent);color:#fff;cursor:pointer;width:100%}
+.btn:disabled{opacity:.6}
+.answer{background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:14px;white-space:pre-wrap;font-size:16px}
+.q{font-weight:800;margin:0 0 4px}
+.msg{font-size:14.5px;color:var(--muted);margin:0}
+.msg.err{color:var(--accent-ink)}
+.foot{font-size:13px;color:var(--muted);margin:10px 0 0;border-top:1px solid var(--line);padding-top:12px}
+.empty{padding:20px;text-align:center;color:var(--muted)}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="brand"><svg class="bolt" viewBox="0 0 24 30" aria-hidden="true"><path d="M15 0 3 17h8l-3 13 13-18h-8z" fill="#DA1F26"/></svg><h1>Rules Guide</h1></div>
+  <p>Electroseck quick guide to the residential wiring rules. Our words, with the clause to check in AS/NZS 3000.</p>
+</div></header>
+
+<div class="sticky"><div class="wrap">
+  <div class="tabs" role="group" aria-label="Mode">
+    <button type="button" id="tSearch" aria-pressed="true">Search</button>
+    <button type="button" id="tAsk" aria-pressed="false">Ask a question</button>
+  </div>
+  <div id="searchBox">
+    <input type="search" id="q" placeholder="e.g. shower zones, pool gpo, voltage drop" autocomplete="off" aria-label="Search the rules guide">
+    <div class="chips" id="chips"></div>
+  </div>
+  <div id="askBox" hidden>
+    <textarea id="aq" placeholder="e.g. Can I put a GPO beside the vanity in a small ensuite?" aria-label="Your question"></textarea>
+    <div style="height:8px"></div>
+    <button type="button" class="btn" id="askBtn">Ask</button>
+  </div>
+</div></div>
+
+<main class="wrap">
+  <div id="askOut" hidden></div>
+  <p class="count" id="count">Loading…</p>
+  <div id="list" style="display:flex;flex-direction:column;gap:10px"></div>
+  <p class="foot">This is a quick guide, not the standard. Always confirm against AS/NZS 3000 and the other standards listed before you rely on it, and isolate and test before you touch anything. Entries marked <span class="tag no">Not checked yet</span> haven't been checked against the book by Electroseck yet. Something wrong or missing? Tell Dayne.</p>
+</main>
+
+<script>
+(function(){
+const BASE='https://refvgqfirhjfxsatyuto.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlZnZncWZpcmhqZnhzYXR5dXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNjAyMzEsImV4cCI6MjEwNjgzNjIzMX0.cYUkiH-V5Gj86m_l5D9yyPYhzJIwINxHa9Kiz_oyuhI';
+const H={apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+let token=new URLSearchParams(location.search).get('t')||'';
+try{if(token)localStorage.setItem('es_token',token);else token=localStorage.getItem('es_token')||''}catch(e){}
+let G=[],sec='',words=[];
+
+function norm(s){return String(s||'').toLowerCase().replace(/[²]/g,'').replace(/mm2/g,'mm')}
+const SYN={gpo:['socket','outlet','power point'],socket:['gpo'],rcd:['safety switch'],'safety switch':['rcd'],aircon:['air conditioning','air con'],ac:['air conditioning'],hws:['hot water'],ensuite:['bathroom'],shower:['bathroom'],bath:['bathroom'],stove:['cooktop','oven'],cooktop:['stove'],efli:['earth fault loop'],vd:['voltage drop'],ccc:['current carrying capacity'],downlight:['recessed'],smoke:['smoke alarm']};
+function score(g){
+  if(!words.length)return 1;
+  const T=norm(g.title),K=norm(g.keywords),S=norm(g.summary),B=norm(g.body),C=norm(g.clause);
+  let s=0;
+  for(const w of words){
+    const alts=[w].concat(SYN[w]||[]);let hit=0;
+    for(const a of alts){if(T.includes(a))hit=Math.max(hit,6);else if(K.includes(a))hit=Math.max(hit,4);else if(S.includes(a)||C.includes(a))hit=Math.max(hit,3);else if(B.includes(a))hit=Math.max(hit,2)}
+    if(!hit)return 0; s+=hit;
+  }
+  return s;
+}
+function hl(t){let h=esc(t);if(!words.length)return h;for(const w of words){if(w.length<2)continue;const re=new RegExp('('+w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');h=h.replace(re,'<mark>$1</mark>')}return h}
+function card(g,open){
+  return '<details class="card"'+(open?' open':'')+' id="e'+g.id+'"><summary><span class="sec">'+esc(g.section)+'</span><h2>'+hl(g.title)+'</h2><p class="sum">'+hl(g.summary)+'</p></summary><ul>'+String(g.body||'').split('\n').filter(Boolean).map(l=>'<li>'+hl(l)+'</li>').join('')+'</ul><div class="ref">Check: <b>'+esc(g.clause)+'</b> '+(g.verified?'<span class="tag ok">Checked by Electroseck</span>':'<span class="tag no">Not checked yet</span>')+'</div></details>';
+}
+function render(){
+  const raw=norm($('q').value.trim());
+  words=raw?raw.split(/\s+/).filter(Boolean):[];
+  let L=G.filter(g=>!sec||g.section===sec).map(g=>({g,s:score(g)})).filter(x=>x.s>0);
+  if(words.length)L.sort((a,b)=>b.s-a.s);
+  $('list').innerHTML=L.length?L.map(x=>card(x.g,words.length&&L.length<=3)).join(''):'<div class="empty">Nothing found. Try fewer or different words, or use <b>Ask a question</b>.</div>';
+  $('count').textContent=(words.length||sec)?L.length+' found':G.length+' topics. Tap one to open it.';
+}
+function chips(){
+  const S=[...new Set(G.map(g=>g.section))];
+  $('chips').innerHTML='<button type="button" class="chip" data-s="" aria-pressed="true">All</button>'+S.map(s=>'<button type="button" class="chip" data-s="'+esc(s)+'" aria-pressed="false">'+esc(s)+'</button>').join('');
+}
+async function load(){
+  try{
+    const r=await fetch(BASE+'/rest/v1/rpc/rules_list',{method:'POST',headers:H,body:'{}'});
+    if(!r.ok)throw new Error(r.status);
+    G=await r.json();chips();render();
+  }catch(e){$('count').className='msg err';$('count').textContent='Couldn\'t load the guide. Check your signal and refresh.'}
+}
+$('q').addEventListener('input',render);
+$('chips').addEventListener('click',e=>{const b=e.target.closest('.chip');if(!b)return;sec=b.dataset.s;document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed',c===b?'true':'false'));render()});
+function mode(ask){$('tSearch').setAttribute('aria-pressed',ask?'false':'true');$('tAsk').setAttribute('aria-pressed',ask?'true':'false');$('searchBox').hidden=ask;$('askBox').hidden=!ask;$('list').hidden=ask;$('count').hidden=ask;$('askOut').hidden=!ask||!$('askOut').innerHTML;if(ask)$('aq').focus();else $('q').focus()}
+$('tSearch').onclick=()=>mode(false);$('tAsk').onclick=()=>mode(true);
+$('askBtn').onclick=async()=>{
+  const q=$('aq').value.trim();const out=$('askOut');out.hidden=false;
+  if(q.length<3){out.innerHTML='<p class="msg err">Type your question first.</p>';return}
+  if(!token){out.innerHTML='<p class="msg err">Asking questions needs your personal Electroseck link (the one from your timesheet email). Open the guide from that link once and it\'ll remember you. Search still works.</p>';return}
+  const b=$('askBtn');b.disabled=true;b.textContent='Thinking…';
+  out.innerHTML='<p class="msg">Checking the guide…</p>';
+  try{
+    const r=await fetch(BASE+'/functions/v1/rules-ask',{method:'POST',headers:H,body:JSON.stringify({token,question:q})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){const m={not_setup:'Ask isn\'t switched on yet. Dayne is setting it up. Use Search for now.',bad_link:'Your link isn\'t recognised. Use the latest link from Electroseck.',limit:'That\'s the limit of questions for today. Use Search or ring Dayne.',ai_failed:'Couldn\'t get an answer right now. Try again in a minute.'}[j.error]||'Couldn\'t get an answer right now. Try again in a minute.';out.innerHTML='<p class="msg err">'+esc(m)+'</p>';return}
+    const used=(j.used||[]).map(id=>G.find(g=>g.id===id)).filter(Boolean);
+    out.innerHTML='<div class="answer"><p class="q">'+esc(q)+'</p>'+esc(j.answer)+'</div>'+(used.length?'<p class="count" style="margin-top:10px">From these guide entries:</p><div style="display:flex;flex-direction:column;gap:10px;margin-top:8px">'+used.map(g=>card(g,false)).join('')+'</div>':'');
+  }catch(e){out.innerHTML='<p class="msg err">No connection. Try again when you\'ve got signal.</p>'}
+  finally{b.disabled=false;b.textContent='Ask'}
+};
+$('aq').addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey))$('askBtn').click()});
+load();
+})();
+</script>
+</body>
+</html>
