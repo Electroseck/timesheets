@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Electroseck Test &amp; Tag Register</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Barlow:wght@400;600;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--ink:#161414;--muted:#6B6363;--line:#E2DDDD;--red:#DA1F26;--head:#151313;--ok:#1E7A4F;--bad:#8E1B1B;--badbg:#F7E3E3;--warn:#8A5A00;--warnbg:#FBF0D9;--display:'Anton',Impact,'Arial Narrow',sans-serif;--body:'Barlow',system-ui,-apple-system,'Segoe UI',sans-serif;--mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:#E9E6E6;color:var(--ink);font-family:var(--body);font-size:13px;line-height:1.4}
+.bar{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;z-index:2}
+.bar button{font:inherit;font-weight:800;font-size:15px;padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+.bar .p{background:var(--red);border-color:var(--red);color:#fff}
+.page{width:297mm;margin:16px auto;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.12)}
+@media (max-width:1180px){.page{width:auto;margin:12px}}
+.hd{background:var(--head);color:#fff;padding:16px 24px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.hd img{height:44px;width:auto;display:block}
+.hd .t{font-family:var(--display);font-size:26px;letter-spacing:.04em;text-transform:uppercase}
+.hd .co{text-align:right;font-size:11.5px;color:#D8D2D2;line-height:1.5}
+.redline{height:5px;background:var(--red)}
+.body{padding:18px 24px;display:flex;flex-direction:column;gap:14px}
+.meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 22px;border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+@media (max-width:700px){.meta{grid-template-columns:1fr}}
+.meta div{display:flex;flex-direction:column}
+.meta span{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.meta b{font-weight:600;font-size:13.5px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+thead{display:table-header-group}
+th{text-align:left;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--red);font-weight:700;padding:6px 8px;white-space:nowrap}
+td{padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n{font-family:var(--mono);white-space:nowrap}
+td.c{text-align:center;font-weight:800}
+tr.g td{background:#F3F1F1;font-weight:800;font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding-top:8px}
+tr.F td{background:var(--badbg)}tr.F td.c{color:var(--bad)}
+tr.N td.c{color:var(--warn)}
+tr{page-break-inside:avoid}
+.tot{display:flex;gap:26px;flex-wrap:wrap;font-weight:800;font-size:14px}
+.tot .f{color:var(--bad)}
+.fine{color:var(--muted);font-size:11px;margin:0}
+.note{border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:12px}
+.sig{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:30px;margin-top:10px}
+.sig div{border-top:1px solid var(--ink);padding-top:4px;font-size:11px;color:var(--muted)}
+.ft{border-top:1px solid var(--line);padding:8px 24px;font-size:10.5px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.msg{text-align:center;padding:60px 16px;color:var(--muted)}
+@page{size:A4 landscape;margin:10mm}
+@media print{body{background:#fff}.bar{display:none}.page{width:auto;margin:0;box-shadow:none}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<div class="bar"><button type="button" class="p" onclick="window.print()">Print / save as PDF</button><button type="button" onclick="history.length>1?history.back():window.close()">Back</button></div>
+<div id="out"><p class="msg">Loading the register…</p></div>
+<script>
+(function(){
+const BASE='https://refvgqfirhjfxsatyuto.supabase.co';
+const KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJlZnZncWZpcmhqZnhzYXR5dXRvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNjAyMzEsImV4cCI6MjEwNjgzNjIzMX0.cYUkiH-V5Gj86m_l5D9yyPYhzJIwINxHa9Kiz_oyuhI';
+const LOGO='data:image/png;base64,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';
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fd=s=>{if(!s)return '';const [y,m,d]=String(s).slice(0,10).split('-');return d+'/'+m+'/'+y};
+const sp=new URLSearchParams(location.search);
+let token=sp.get('t')||'';try{if(token)localStorage.setItem('es_token',token);else token=localStorage.getItem('es_token')||''}catch(e){}
+const id=sp.get('r')||'';
+const out=document.getElementById('out');
+if(!token||!id){out.innerHTML='<p class="msg">Open this from the Test &amp; Tag page or Dayne’s hub.</p>';return}
+fetch(BASE+'/rest/v1/rpc/tt_register_get',{method:'POST',headers:{apikey:KEY,Authorization:'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify({p_token:token,p_reg:id})})
+.then(r=>r.ok?r.json():Promise.reject(r.status)).then(r=>{
+  if(!r||!r.site){out.innerHTML='<p class="msg">That register couldn’t be found.</p>';return}
+  const s=r.site,items=r.items||[];
+  document.title='Test & Tag Register – '+(s.client||s.address)+' – '+fd(r.tested_on);
+  const groups=[];items.forEach(it=>{let g=groups.find(x=>x.name===it.grp);if(!g){g={name:it.grp,rows:[]};groups.push(g)}g.rows.push(it)});
+  const uniq=a=>[...new Set(a.filter(Boolean))];
+  const per=groups.map(g=>{const due=g.rows.filter(i=>i.result==='P'&&i.due_date).map(i=>i.due_date).sort()[0];const ds=uniq(g.rows.map(i=>i.test_date)).sort();const iv=uniq(g.rows.map(i=>i.interval_months));return {name:g.name,due,ds,iv}});
+  const multi=groups.length>1&&groups.some(g=>g.name);
+  const testTxt=multi&&uniq(items.map(i=>i.test_date)).length>1?per.map(p=>`${esc(p.name||'Other')} ${p.ds.map(fd).join(', ')}`).join('<br>'):uniq(items.map(i=>i.test_date)).sort().map(fd).join(', ')||fd(r.tested_on);
+  const dues=per.filter(p=>p.due);
+  const dueTxt=multi&&uniq(dues.map(p=>p.due)).length>1?dues.map(p=>`${esc(p.name||'Other')} ${fd(p.due)}`).join('<br>'):fd(dues.map(p=>p.due).sort()[0]);
+  const ivAll=uniq(items.map(i=>i.interval_months)).sort((a,b)=>a-b);
+  const ivTxt=multi&&ivAll.length>1?per.map(p=>`${esc(p.name||'Other')} ${p.iv.join('/')} months`).join('<br>'):ivAll.map(m=>m+' months').join(', ');
+  const c=k=>items.filter(i=>i.result===k).length;
+  const R={P:'P',F:'F',N:'N/S'};
+  let n=0;
+  const rows=groups.map(g=>(g.name?`<tr class="g"><td colspan="8">${esc(g.name)}</td></tr>`:'')+g.rows.map(i=>{n++;return `<tr class="${esc(i.result)}"><td class="n">${n}</td><td class="n">${i.tag?esc(i.tag):'—*'}</td><td>${esc(i.description)}</td><td>${esc(i.location)}</td><td class="c">${R[i.result]||esc(i.result)}</td><td class="n">${fd(i.test_date)}</td><td class="n">${i.result==='P'?fd(i.due_date):'—'}</td><td>${esc(i.notes)}</td></tr>`}).join('')).join('');
+  const noTag=items.some(i=>!i.tag);
+  out.innerHTML=`<div class="page">
+   <div class="hd"><img src="${LOGO}" alt="Electroseck"><div class="t">Test &amp; Tag Register</div><div class="co"><b style="color:#fff">Electroseck Pty Ltd</b><br>Licensed Electricians · Test &amp; Tag · Installations<br>electroseck.com.au · dayne@electroseck.com.au</div></div>
+   <div class="redline"></div>
+   <div class="body">
+    <div class="meta">
+      <div><span>Project / client</span><b>${esc(s.client)}${s.builder?' (Builder: '+esc(s.builder)+')':''}${s.job_no?' · Job '+esc(s.job_no):''}</b></div>
+      <div><span>Location</span><b>${esc(s.address)}</b></div>
+      <div><span>Technician</span><b>${esc(r.technician)}</b></div>
+      <div><span>Test date</span><b>${testTxt}</b></div>
+      <div><span>Next test due</span><b>${dueTxt||'—'}</b></div>
+      <div><span>Test interval</span><b>${ivTxt}</b></div>
+    </div>
+    <div class="tw"><table><thead><tr><th>Item</th><th>Tag no.</th><th>Description</th><th>Location</th><th style="text-align:center">Result</th><th>Test date</th><th>Test due</th><th>Notes</th></tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="tot"><span>Items tested: ${items.length-c('N')}</span><span>Passed: ${c('P')}</span><span class="${c('F')?'f':''}">Failed: ${c('F')}</span>${c('N')?`<span>Not sighted: ${c('N')}</span>`:''}</div>
+    ${r.note&&r.source!=='import'?`<div class="note">${esc(r.note)}</div>`:''}
+    <p class="fine">P = passed. F = failed: the item was tagged out of service and must not be used until repaired and retested. N/S = not sighted this visit.${noTag?' * Tag number to be added.':''}<br>
+    Tested to AS/NZS 3760. Construction sites per AS/NZS 3012: tools, leads and power boards every 3 months; site sheds and transportable buildings, their equipment, and the main switchboard and temporary boards every 6 months. RCDs: push-button test monthly (fixed) or daily (portable).</p>
+    <div class="sig"><div>Technician signature</div><div>Date</div></div>
+   </div>
+   <div class="ft"><span>Electroseck Pty Ltd · ABN 17 611 005 004 · QLD Electrical Contractor Licence 80778</span><span>3/1 Ern Harley Drive, Burleigh Heads QLD 4220</span></div>
+  </div>`;
+}).catch(()=>{out.innerHTML='<p class="msg">Couldn’t load the register. Check your connection and refresh.</p>'});
+})();
+</script>
+</body>
+</html>
