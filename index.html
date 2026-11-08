@@ -67,6 +67,16 @@ input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-vis
 .done.sent{background:var(--ok)}
 .weeknav{display:flex;justify-content:space-between;gap:8px}
 .weeknav button{font:600 14px var(--body);padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--fg);cursor:pointer}
+.gl{display:flex;flex-direction:column;gap:0}
+.gi{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line)}
+.gi:first-child{border-top:0}
+.gi .t{flex:1;min-width:0}
+.gi .t small{display:block;color:var(--muted);font-size:13px}
+.gi .amt{font-family:var(--mono);font-weight:500;white-space:nowrap}
+.gi img{max-width:100%;border-radius:8px;margin-top:6px;display:block}
+.sb{font:600 13px var(--body);padding:6px 9px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer;margin-top:6px;margin-right:6px}
+.gadd{font:800 15px var(--body);padding:11px 14px;border-radius:10px;border:0;background:var(--head);color:#fff;cursor:pointer}
+.gmsg{font-size:14px;margin:0;color:var(--muted)}.gmsg.err{color:var(--accent-ink);font-weight:600}.gmsg.ok{color:var(--ok);font-weight:600}
 .empty{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;font-size:15.5px}
 </style>
 </head>
@@ -97,6 +107,7 @@ const NAMES=['Mon','Tue','Wed','Thu','Fri','Sat'];
 const LEAVE={sick:'Sick day (paid)',annual:'Holiday (paid)',unpaid:'Day off – no pay'};
 let STD={start:'06:30',finish:'14:30',break:30};
 let week=null, data=null, st=[], jobs=[], dirty=false;
+let gear=[], gf={what:'',amount:'',job:'',date:'',photo:null,photoName:''}, gBusy=false;
 
 async function rpc(fn,body){
   const r=await fetch(SB+fn,{method:'POST',headers:{'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -116,6 +127,7 @@ async function load(wk){
   catch(e){ $('main').innerHTML='<div class="banner err">Couldn\'t load your timesheet. Check you have signal and refresh the page. ('+esc(e.message)+')</div>'; return; }
   if(data.error){ $('main').innerHTML='<div class="banner err">This link isn\'t working. Ask Emma to send you a new one.</div>'; $('wkline').textContent=''; return; }
   STD=data.std||STD; week=data.week_start; jobs=data.jobs||[];
+  gear=[]; try{ const g=await rpc('ts_exp_list',{p_token:token,p_week:week}); gear=(g&&g.items)||[]; }catch(e){}
   const saved={}; (data.days||[]).forEach(d=>saved[d.date]=d);
   st=NAMES.map((n,i)=>{const date=addDays(week,i), s=saved[date];
     if(s) return {date,start:s.start||'',finish:s.finish||'',break:s.break||0,travel:+s.travel||0,leave:s.leave||'',jobs:(s.jobs&&s.jobs.length?s.jobs:[''])};
@@ -150,11 +162,66 @@ function render(){
     h+='</section>';
   });
   h+='<label class="f">Anything Emma should know? (optional)<textarea id="note" rows="2"'+(locked?' disabled':'')+'>'+esc(data.note||'')+'</textarea></label>';
-  $('main').innerHTML=h; $('foot').hidden=false; total();
+  h+='<section class="day" id="gearsec"></section>';
+  $('main').innerHTML=h; $('foot').hidden=false; renderGear(); total();
   $('done').disabled=locked; $('done').textContent=locked?'Approved':(data.status==='submitted'?'Send again to Emma':'Done – send to Emma'); $('done').classList.toggle('sent',locked);
 }
 function to12(t){if(!t)return'';let [h,m]=t.split(':').map(Number);const ap=h>=12?'pm':'am';h=h%12||12;return h+(m?':'+pad(m):'')+ap}
-function total(){let t=0,tr=0,lv=0;st.forEach(d=>{t+=hrs(d);tr+=+d.travel||0;if(d.leave&&d.leave!=='unpaid')lv++});$('wk').textContent=fmt(t)+' hrs'+(tr?' + '+fmt(tr)+' travel':'')+(lv?' + '+lv+' leave day'+(lv>1?'s':''):'');}
+function total(){let t=0,tr=0,lv=0;st.forEach(d=>{t+=hrs(d);tr+=+d.travel||0;if(d.leave&&d.leave!=='unpaid')lv++});const g=gearTotal();$('wk').textContent=fmt(t)+' hrs'+(tr?' + '+fmt(tr)+' travel':'')+(lv?' + '+lv+' leave day'+(lv>1?'s':''):'')+(g?' · $'+g.toFixed(2)+' gear':'');}
+/* ---------- gear paid for by crew ---------- */
+const money=n=>'$'+(+n).toFixed(2);
+function gearTotal(){return gear.reduce((s,x)=>s+(+x.amount||0),0)}
+function renderGear(){
+  const el=$('gearsec'); if(!el) return;
+  const locked=data.status==='approved', g=gearTotal();
+  if(!gf.date) gf.date=(data.today&&data.today>=week&&data.today<=addDays(week,5))?data.today:week;
+  let h='<div class="dh"><h2>Gear you paid for<small>you get it back</small></h2><span class="hrs">'+(g?money(g):'')+'</span></div>';
+  h+='<p class="calc">Bought something for work with your own money? Put in what it was, how much, and take a photo of the receipt. Emma pays it back with your wages, no tax on it.</p>';
+  h+='<div class="gl">'+(gear.length?gear.map(x=>'<div class="gi"><div class="t"><b>'+esc(x.what)+'</b><small>'+(x.date?nice(x.date):'')+(x.job?' · '+esc(x.job):'')+(x.status==='paid'?' · paid back':'')+'</small>'+
+    (x.has_photo?'<button type="button" class="sb" data-rcpt="'+x.id+'">Show receipt</button>':'<small>No receipt photo</small>')+
+    (!locked&&x.status==='claimed'?'<button type="button" class="sb" data-gdel="'+x.id+'">Remove</button>':'')+
+    '</div><span class="amt">'+money(x.amount)+'</span></div>').join(''):'<p class="calc">Nothing this week.</p>')+'</div>';
+  if(!locked){
+    const dayOpts=NAMES.map((n,i)=>{const d=addDays(week,i);return '<option value="'+d+'"'+(d===gf.date?' selected':'')+'>'+n+' '+nice(d)+'</option>'}).join('');
+    h+='<div class="row two"><label class="f">What did you buy?<input id="gx-what" value="'+esc(gf.what)+'" placeholder="e.g. Drill bits, Bunnings"></label><label class="f">How much? ($ inc GST)<input id="gx-amt" inputmode="decimal" value="'+esc(gf.amount)+'" placeholder="0.00"></label></div>';
+    h+='<div class="row two"><label class="f">Which job? (optional)<input id="gx-job" list="jl" value="'+esc(gf.job)+'" placeholder="Job number or site"></label><label class="f">Day<select id="gx-date">'+dayOpts+'</select></label></div>';
+    h+='<label class="f">Photo of the receipt<input type="file" id="gx-photo" accept="image/*" capture="environment"></label>'+(gf.photo?'<p class="gmsg ok">Receipt photo ready ✓</p>':'');
+    h+='<button type="button" class="gadd" id="gx-add">Add gear</button><p class="gmsg" id="gx-msg"></p>';
+  }
+  el.innerHTML=h;
+  el.oninput=e=>{const t=e.target;if(t.id==='gx-what')gf.what=t.value;else if(t.id==='gx-amt')gf.amount=t.value;else if(t.id==='gx-job')gf.job=t.value};
+  el.onchange=async e=>{e.stopPropagation();const t=e.target;
+    if(t.id==='gx-date')gf.date=t.value;
+    if(t.id==='gx-photo'){const m=$('gx-msg');m.className='gmsg';m.textContent='Getting the photo ready…';gf.photo=await shrink(t);m.textContent='';renderGear();}};
+  el.onclick=async e=>{const b=e.target.closest('button');if(!b)return;e.stopPropagation();
+    if(b.id==='gx-add')return addGear(b);
+    if(b.dataset.gdel){if(!confirm('Remove this from your timesheet?'))return;b.disabled=true;
+      try{const r=await rpc('ts_exp_delete',{p_token:token,p_id:+b.dataset.gdel});if(r.ok){gear=gear.filter(x=>x.id!=b.dataset.gdel);renderGear();total()}else{b.disabled=false;b.textContent="Can't remove"}}catch(err){b.disabled=false;b.textContent='No signal, try again'}}
+    if(b.dataset.rcpt){b.disabled=true;b.textContent='Loading…';
+      try{const src=await rpc('ts_exp_photo',{p_token:token,p_id:+b.dataset.rcpt});if(src){const img=document.createElement('img');img.src=src;img.alt='Receipt';b.replaceWith(img)}else b.textContent='Photo not found'}catch(err){b.disabled=false;b.textContent='No signal, try again'}}
+  };
+}
+async function addGear(b){
+  const m=$('gx-msg'),amt=parseFloat(String(gf.amount).replace(/[$,\s]/g,''));
+  m.className='gmsg err';
+  if(gf.what.trim().length<2){m.textContent='Write what you bought.';return}
+  if(!(amt>0)||amt>=10000){m.textContent='Put in the amount, e.g. 45.90';return}
+  if(!gf.photo&&b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='No receipt photo – tap to add anyway';m.textContent='Emma needs the receipt to pay you back. Take a photo if you can.';return}
+  if(gBusy)return;gBusy=true;b.disabled=true;b.textContent='Adding…';m.className='gmsg';m.textContent='';
+  try{const r=await rpc('ts_exp_add',{p_token:token,p_week:week,p_date:gf.date||null,p_amount:amt,p_what:gf.what.trim(),p_job:gf.job.trim()||null,p_photo:gf.photo});
+    if(r.error){b.disabled=false;b.textContent='Add gear';m.className='gmsg err';m.textContent=r.error==='already_approved'?'Emma has already approved this week. Give her a call.':r.error==='bad_photo'?'That photo didn\'t work. Try taking it again.':'Couldn\'t add it. Check the amount.';gBusy=false;return}
+    gear.push({id:r.id,date:gf.date,amount:Math.round(amt*100)/100,what:gf.what.trim(),job:gf.job.trim()||null,has_photo:!!gf.photo,status:'claimed'});
+    gf={what:'',amount:'',job:'',date:gf.date,photo:null};gBusy=false;renderGear();total();
+    const m2=$('gx-msg');if(m2){m2.className='gmsg ok';m2.textContent='Added. Emma can see it now.'}
+  }catch(err){gBusy=false;b.disabled=false;b.textContent='No signal? Tap to try again'}
+}
+async function shrink(input){
+  const f=input.files&&input.files[0]; if(!f) return null;
+  try{const bmp=await createImageBitmap(f);const s=Math.min(1,1600/Math.max(bmp.width,bmp.height));
+    const c=document.createElement('canvas');c.width=Math.round(bmp.width*s);c.height=Math.round(bmp.height*s);
+    c.getContext('2d').drawImage(bmp,0,0,c.width,c.height);return c.toDataURL('image/jpeg',0.78);
+  }catch(e){return await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=()=>res(null);r.readAsDataURL(f)})}
+}
 document.addEventListener('change',e=>{const el=e.target;if(el.id==='note'){data.note=el.value;dirty=true;queueSave();return}if(el.dataset.i==null)return;const i=+el.dataset.i;
   if(el.dataset.j!=null) st[i].jobs[+el.dataset.j]=el.value;
   else if(el.dataset.k==='travel') st[i].travel=Math.max(0,Math.min(16,parseFloat(el.value)||0));
