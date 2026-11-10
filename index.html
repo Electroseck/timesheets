@@ -106,7 +106,7 @@ const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const dname=iso=>DOW[new Date(iso+'T00:00:00').getDay()];
 const isWknd=iso=>{const g=new Date(iso+'T00:00:00').getDay();return g===0||g===6};
-let NAMES=[], wkEnd=null;
+let NAMES=[], DATES=[], wkEnd=null;
 const LEAVE={sick:'Sick day (paid)',annual:'Holiday (paid)',unpaid:'Day off – no pay'};
 let STD={start:'06:30',finish:'14:30',break:30};
 let week=null, data=null, st=[], jobs=[], dirty=false;
@@ -130,10 +130,10 @@ async function load(wk){
   catch(e){ $('main').innerHTML='<div class="banner err">Couldn\'t load your timesheet. Check you have signal and refresh the page. ('+esc(e.message)+')</div>'; return; }
   if(data.error){ $('main').innerHTML='<div class="banner err">This link isn\'t working. Ask Emma to send you a new one.</div>'; $('wkline').textContent=''; return; }
   STD=data.std||STD; week=data.week_start; jobs=data.jobs||[];
-  wkEnd=data.week_end||addDays(week,6); NAMES=[]; for(let d=week;d<=wkEnd;d=addDays(d,1)) NAMES.push(dname(d));
+  wkEnd=data.week_end||addDays(week,6); DATES=[]; for(let d=week;d<=wkEnd;d=addDays(d,1)) if(dname(d)!=='Sun') DATES.push(d); NAMES=DATES.map(dname);
   gear=[]; try{ const g=await rpc('ts_exp_list',{p_token:token,p_week:week}); gear=(g&&g.items)||[]; }catch(e){}
   const saved={}; (data.days||[]).forEach(d=>saved[d.date]=d);
-  st=NAMES.map((n,i)=>{const date=addDays(week,i), s=saved[date];
+  st=DATES.map((date,i)=>{const s=saved[date];
     if(s) return {date,start:s.start||'',finish:s.finish||'',break:s.break||0,travel:+s.travel||0,leave:s.leave||'',jobs:(s.jobs&&s.jobs.length?s.jobs:[''])};
     const future=data.today&&date>data.today;
     if((data.status==='submitted'||data.status==='approved')||future||isWknd(date)) return {date,start:'',finish:'',break:0,travel:0,leave:'',jobs:[''],future};
@@ -177,7 +177,7 @@ function gearTotal(){return gear.reduce((s,x)=>s+(+x.amount||0),0)}
 function renderGear(){
   const el=$('gearsec'); if(!el) return;
   const locked=data.status==='approved', g=gearTotal();
-  if(!gf.date) gf.date=(data.today&&data.today>=week&&data.today<=wkEnd)?data.today:week;
+  if(!gf.date) gf.date=(data.today&&data.today>=week&&data.today<=wkEnd&&dname(data.today)!=='Sun')?data.today:week;
   let h='<div class="dh"><h2>Gear you paid for<small>you get it back</small></h2><span class="hrs">'+(g?money(g):'')+'</span></div>';
   h+='<p class="calc">Bought something for work with your own money? Put in what it was, how much, and take a photo of the receipt. Emma pays it back with your wages, no tax on it.</p>';
   h+='<div class="gl">'+(gear.length?gear.map(x=>'<div class="gi"><div class="t"><b>'+esc(x.what)+'</b><small>'+(x.date?nice(x.date):'')+(x.job?' · '+esc(x.job):'')+(x.status==='paid'?' · paid back':'')+'</small>'+
@@ -185,7 +185,7 @@ function renderGear(){
     (!locked&&x.status==='claimed'?'<button type="button" class="sb" data-gdel="'+x.id+'">Remove</button>':'')+
     '</div><span class="amt">'+money(x.amount)+'</span></div>').join(''):'<p class="calc">Nothing this week.</p>')+'</div>';
   if(!locked){
-    const dayOpts=NAMES.map((n,i)=>{const d=addDays(week,i);return '<option value="'+d+'"'+(d===gf.date?' selected':'')+'>'+n+' '+nice(d)+'</option>'}).join('');
+    const dayOpts=DATES.map((d,i)=>{const n=NAMES[i];return '<option value="'+d+'"'+(d===gf.date?' selected':'')+'>'+n+' '+nice(d)+'</option>'}).join('');
     h+='<div class="row two"><label class="f">What did you buy?<input id="gx-what" value="'+esc(gf.what)+'" placeholder="e.g. Drill bits, Bunnings"></label><label class="f">How much? ($ inc GST)<input id="gx-amt" inputmode="decimal" value="'+esc(gf.amount)+'" placeholder="0.00"></label></div>';
     h+='<div class="row two"><label class="f">Which job? (optional)<input id="gx-job" list="jl" value="'+esc(gf.job)+'" placeholder="Job number or site"></label><label class="f">Day<select id="gx-date">'+dayOpts+'</select></label></div>';
     h+='<label class="f">Photo of the receipt<input type="file" id="gx-photo" accept="image/*" capture="environment"></label>'+(gf.photo?'<p class="gmsg ok">Receipt photo ready ✓</p>':'');
