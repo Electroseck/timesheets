@@ -103,7 +103,10 @@ const params=new URLSearchParams(location.search);
 const token=(params.get('t')||'').trim();
 const $=id=>document.getElementById(id);
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
-const NAMES=['Mon','Tue','Wed','Thu','Fri','Sat'];
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const dname=iso=>DOW[new Date(iso+'T00:00:00').getDay()];
+const isWknd=iso=>{const g=new Date(iso+'T00:00:00').getDay();return g===0||g===6};
+let NAMES=[], wkEnd=null;
 const LEAVE={sick:'Sick day (paid)',annual:'Holiday (paid)',unpaid:'Day off – no pay'};
 let STD={start:'06:30',finish:'14:30',break:30};
 let week=null, data=null, st=[], jobs=[], dirty=false;
@@ -127,19 +130,19 @@ async function load(wk){
   catch(e){ $('main').innerHTML='<div class="banner err">Couldn\'t load your timesheet. Check you have signal and refresh the page. ('+esc(e.message)+')</div>'; return; }
   if(data.error){ $('main').innerHTML='<div class="banner err">This link isn\'t working. Ask Emma to send you a new one.</div>'; $('wkline').textContent=''; return; }
   STD=data.std||STD; week=data.week_start; jobs=data.jobs||[];
+  wkEnd=data.week_end||addDays(week,6); NAMES=[]; for(let d=week;d<=wkEnd;d=addDays(d,1)) NAMES.push(dname(d));
   gear=[]; try{ const g=await rpc('ts_exp_list',{p_token:token,p_week:week}); gear=(g&&g.items)||[]; }catch(e){}
   const saved={}; (data.days||[]).forEach(d=>saved[d.date]=d);
   st=NAMES.map((n,i)=>{const date=addDays(week,i), s=saved[date];
     if(s) return {date,start:s.start||'',finish:s.finish||'',break:s.break||0,travel:+s.travel||0,leave:s.leave||'',jobs:(s.jobs&&s.jobs.length?s.jobs:[''])};
     const future=data.today&&date>data.today;
-    if((data.status==='submitted'||data.status==='approved')||future||i===5) return {date,start:'',finish:'',break:0,travel:0,leave:'',jobs:[''],future};
+    if((data.status==='submitted'||data.status==='approved')||future||isWknd(date)) return {date,start:'',finish:'',break:0,travel:0,leave:'',jobs:[''],future};
     return {date,start:STD.start,finish:STD.finish,break:STD.break,travel:0,leave:'',jobs:['']};
   });
   dirty=false; render();
 }
 function render(){
-  const sat=addDays(week,5);
-  $('wkline').textContent='Week Mon '+nice(week)+' – Sat '+nice(sat)+' · send to Emma by 3pm Tuesday';
+  $('wkline').textContent='Week '+dname(week)+' '+nice(week)+' – '+dname(wkEnd)+' '+nice(wkEnd)+' · send to Emma by 3pm '+dname(wkEnd)+' '+nice(wkEnd);
   let h='<p class="hello">G\'day '+esc(data.name)+'</p>';
   if(data.status==='approved') h+='<div class="banner ok">Emma has already approved this week. If something\'s wrong, give her a call.</div>';
   else if(data.status==='draft') h+='<div class="banner ok" style="background:var(--panel);color:var(--fg);border-color:var(--line)">Saved as you go. Emma can\'t see it as finished until you tap Done.</div>';
@@ -153,7 +156,7 @@ function render(){
     const lsel='<label class="f lv">Day off?<select id="lv-'+i+'" data-i="'+i+'" data-k="leave"'+(locked?' disabled':'')+'><option value=""'+(!d.leave?' selected':'')+'>No – worked</option>'+Object.keys(LEAVE).map(k=>'<option value="'+k+'"'+(d.leave===k?' selected':'')+'>'+LEAVE[k]+'</option>').join('')+'</select></label>';
     const isToday=data.today===d.date;
     if(d.future&&!d.start&&!d.leave&&!d.jobs.some(x=>x.trim())){h+='<section class="day off"><div class="dh"><h2>'+NAMES[i]+'<small>'+nice(d.date)+'</small></h2><span class="hrs">Coming up</span></div>'+(locked?'':'<button type="button" class="addjob" data-fill="'+i+'">Fill in this day</button>')+'</section>';return}
-    h+='<section class="day'+(off?' off':'')+(isToday?' today':'')+'"><div class="dh"><h2>'+NAMES[i]+'<small>'+nice(d.date)+(isToday?' · today':'')+'</small></h2><span class="hrs">'+(d.leave?LEAVE[d.leave]:off?'Not worked':fmt(hr)+' hrs')+(i===5&&!off&&!d.leave?'<span class="tag">Sat</span>':'')+'</span></div>';
+    h+='<section class="day'+(off?' off':'')+(isToday?' today':'')+'"><div class="dh"><h2>'+NAMES[i]+'<small>'+nice(d.date)+(isToday?' · today':'')+'</small></h2><span class="hrs">'+(d.leave?LEAVE[d.leave]:off?'Not worked':fmt(hr)+' hrs')+(isWknd(d.date)&&!off&&!d.leave?'<span class="tag">'+NAMES[i]+'</span>':'')+'</span></div>';
     if(d.leave){h+=lsel+'<p class="calc">'+(d.leave==='unpaid'?'Emma won\'t pay this day.':'Emma will pay this as '+(d.leave==='sick'?'sick leave':'holiday pay')+'.')+' Change it back to "No – worked" if that\'s wrong.</p></section>';return}
     h+='<div class="row"><label class="f">Start<input type="time" id="s-'+i+'" data-i="'+i+'" data-k="start" value="'+esc(d.start)+'"'+(locked?' disabled':'')+'></label><label class="f">Finish<input type="time" id="f-'+i+'" data-i="'+i+'" data-k="finish" value="'+esc(d.finish)+'"'+(locked?' disabled':'')+'></label><label class="f">Break<select id="b-'+i+'" data-i="'+i+'" data-k="break"'+(locked?' disabled':'')+'>'+[0,15,30,45,60].map(v=>'<option value="'+v+'"'+(+d.break===v?' selected':'')+'>'+v+' min</option>').join('')+'</select></label></div>';
     h+='<div class="row two"><label class="f">Travel hrs<div class="step"><button type="button" data-step="'+i+'" data-d="-0.5" aria-label="Less travel"'+(locked?' disabled':'')+'>−</button><input id="tr-'+i+'" inputmode="decimal" data-i="'+i+'" data-k="travel" value="'+d.travel+'"'+(locked?' disabled':'')+'><button type="button" data-step="'+i+'" data-d="0.5" aria-label="More travel"'+(locked?' disabled':'')+'>+</button></div></label><div class="tools">'+(i>0&&!locked?'<button type="button" data-same="'+i+'">Same as yesterday</button>':'')+'</div></div>'+lsel;
@@ -174,7 +177,7 @@ function gearTotal(){return gear.reduce((s,x)=>s+(+x.amount||0),0)}
 function renderGear(){
   const el=$('gearsec'); if(!el) return;
   const locked=data.status==='approved', g=gearTotal();
-  if(!gf.date) gf.date=(data.today&&data.today>=week&&data.today<=addDays(week,5))?data.today:week;
+  if(!gf.date) gf.date=(data.today&&data.today>=week&&data.today<=wkEnd)?data.today:week;
   let h='<div class="dh"><h2>Gear you paid for<small>you get it back</small></h2><span class="hrs">'+(g?money(g):'')+'</span></div>';
   h+='<p class="calc">Bought something for work with your own money? Put in what it was, how much, and take a photo of the receipt. Emma pays it back with your wages, no tax on it.</p>';
   h+='<div class="gl">'+(gear.length?gear.map(x=>'<div class="gi"><div class="t"><b>'+esc(x.what)+'</b><small>'+(x.date?nice(x.date):'')+(x.job?' · '+esc(x.job):'')+(x.status==='paid'?' · paid back':'')+'</small>'+
@@ -229,7 +232,7 @@ document.addEventListener('change',e=>{const el=e.target;if(el.id==='note'){data
   else st[i][el.dataset.k]=el.dataset.k==='break'?+el.value:el.value;
   dirty=true; if(el.dataset.j==null) render(); else total(); queueSave();});
 document.addEventListener('click',async e=>{const b=e.target.closest('button');if(!b)return;
-  if(b.id==='prev'||b.id==='next'){ if(dirty&&b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='Unsent changes – tap again';return} load(addDays(week,b.id==='prev'?-7:7)); return }
+  if(b.id==='prev'||b.id==='next'){ if(dirty&&b.dataset.ok!=='1'){b.dataset.ok='1';b.textContent='Unsent changes – tap again';return} load(b.id==='prev'?(data.prev_week||addDays(week,-7)):(data.next_week||addDays(week,7))); return }
   if(b.dataset.step!=null){const i=+b.dataset.step;st[i].travel=Math.max(0,Math.min(16,(+st[i].travel||0)+(+b.dataset.d)));dirty=true;render();queueSave();return}
   if(b.dataset.same!=null){const i=+b.dataset.same,p=st[i-1];Object.assign(st[i],{start:p.start||STD.start,finish:p.finish||STD.finish,break:p.break,travel:p.travel});if(!st[i].jobs.some(x=>x.trim()))st[i].jobs=p.jobs.slice();dirty=true;render();queueSave();return}
   if(b.dataset.fill!=null){const i=+b.dataset.fill;Object.assign(st[i],{start:STD.start,finish:STD.finish,break:STD.break,future:false});dirty=true;render();queueSave();return}
